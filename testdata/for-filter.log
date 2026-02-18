@@ -1,0 +1,10 @@
+{"level":"info","msg":"Server starting","ts":"2024-01-15T10:00:00Z","service":"api","port":8080}
+{"level":"info","msg":"Database connected","ts":"2024-01-15T10:00:01Z","service":"api","host":"localhost:5432"}
+{"level":"debug","msg":"Loading configuration","ts":"2024-01-15T10:00:01Z","service":"api","config_path":"/etc/app/config.yaml"}
+{"level":"info","msg":"Cache initialized","ts":"2024-01-15T10:00:02Z","service":"cache","backend":"redis","ttl":3600}
+{"level":"warn","msg":"Slow query detected","ts":"2024-01-15T10:00:05Z","service":"db","query":"SELECT * FROM users","duration_ms":1523}
+{"level":"info","msg":"Request received","ts":"2024-01-15T10:00:06Z","service":"api","method":"GET","path":"/api/v1/users","request_id":"abc-123"}
+{"level":"info","msg":"Request completed","ts":"2024-01-15T10:00:06Z","service":"api","method":"GET","path":"/api/v1/users","status":200,"duration_ms":45}
+{"level":"error","msg":"Connection refused","ts":"2024-01-15T10:00:10Z","service":"api","host":"payment-service:443","error":"dial tcp: connection refused"}
+{"level":"warn","msg":"Retry attempt","ts":"2024-01-15T10:00:11Z","service":"api","host":"payment-service:443","attempt":1,"max_retries":3}
+{"level":"warn","msg":"Retry attempt","ts":"2024-01-15T10:00:12Z","service":"api","host":"payment-service:443","attempt":2,"max_retries":3}

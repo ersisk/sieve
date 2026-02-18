@@ -17,6 +17,8 @@ type StatusBar struct {
 	mode        string
 	following   bool
 	levelFilter logentry.Level
+	info        string
+	errorMsg    string
 	width       int
 	height      int
 	theme       theme.Theme
@@ -67,6 +69,18 @@ func (m *StatusBar) SetLevelFilter(level logentry.Level) {
 	m.levelFilter = level
 }
 
+// SetInfo sets the info message.
+func (m *StatusBar) SetInfo(info string) {
+	m.info = info
+	m.errorMsg = ""
+}
+
+// SetError sets the error message.
+func (m *StatusBar) SetError(err string) {
+	m.errorMsg = err
+	m.info = ""
+}
+
 // SetSize sets the dimensions of the status bar.
 func (m *StatusBar) SetSize(width, height int) {
 	m.width = width
@@ -93,6 +107,16 @@ func (m StatusBar) View() string {
 // renderContent renders the status bar content.
 func (m StatusBar) renderContent() string {
 	var parts []string
+
+	if m.errorMsg != "" {
+		errorStyle := m.theme.ErrorStyle()
+		return errorStyle.Render(fmt.Sprintf("❌ %s", m.errorMsg))
+	}
+
+	if m.info != "" {
+		infoStyle := m.theme.InfoStyle()
+		return infoStyle.Render(fmt.Sprintf("ℹ️ %s", m.info))
+	}
 
 	filePart := m.renderFilePart()
 	if filePart != "" {

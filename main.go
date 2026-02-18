@@ -1,9 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/ersanisk/sieve/cmd"
 )
 
@@ -13,8 +10,8 @@ var (
 )
 
 func main() {
-	if err := cmd.Execute(version, buildTime); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+	rootCmd := cmd.NewRootCmd(version, buildTime)
+	if err := rootCmd.Execute(); err != nil {
+		panic(err)
 	}
 }

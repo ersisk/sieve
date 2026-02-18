@@ -34,6 +34,8 @@ type Theme interface {
 	StatusBarStyle() lipgloss.Style
 	BorderStyle() lipgloss.Style
 	HighlightStyle() lipgloss.Style
+	ErrorStyle() lipgloss.Style
+	InfoStyle() lipgloss.Style
 }
 
 // BaseTheme provides a default Theme implementation using ThemeColors.
@@ -97,4 +99,16 @@ func (t BaseTheme) HighlightStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Background(t.ThemeColors.Highlight).
 		Foreground(t.ThemeColors.Background)
+}
+
+func (t BaseTheme) ErrorStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(t.ThemeColors.Error).
+		Bold(true)
+}
+
+func (t BaseTheme) InfoStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(t.ThemeColors.Info).
+		Bold(true)
 }

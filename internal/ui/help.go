@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/ersanisk/sieve/internal/theme"
@@ -11,10 +12,11 @@ import (
 
 // Help displays help information and key bindings.
 type Help struct {
-	visible bool
-	width   int
-	height  int
-	theme   theme.Theme
+	visible      bool
+	width        int
+	height       int
+	scrollOffset int
+	theme        theme.Theme
 }
 
 // NewHelp creates a new Help overlay.
@@ -28,6 +30,7 @@ func NewHelp(theme theme.Theme) Help {
 // Show shows the help overlay.
 func (m *Help) Show() {
 	m.visible = true
+	m.scrollOffset = 0
 }
 
 // Hide hides the help overlay.
@@ -56,33 +59,134 @@ func (m *Help) SetTheme(theme theme.Theme) {
 	m.theme = theme
 }
 
+// Update handles keyboard input for help.
+func (m Help) Update(msg tea.Msg) (Help, tea.Cmd) {
+	switch msg := msg.(type) {
+	case ScrollUpMsg:
+		m.scrollUp(msg.Amount)
+	case ScrollDownMsg:
+		m.scrollDown(msg.Amount)
+	}
+	return m, nil
+}
+
+// scrollUp scrolls up by the specified amount.
+func (m *Help) scrollUp(amount int) {
+	m.scrollOffset -= amount
+	if m.scrollOffset < 0 {
+		m.scrollOffset = 0
+	}
+}
+
+// scrollDown scrolls down by the specified amount.
+func (m *Help) scrollDown(amount int) {
+	contentLines := m.getContentLines()
+	maxOffset := len(contentLines) - (m.height - 4)
+	if maxOffset < 0 {
+		maxOffset = 0
+	}
+	m.scrollOffset += amount
+	if m.scrollOffset > maxOffset {
+		m.scrollOffset = maxOffset
+	}
+}
+
+// getContentLines returns the content as lines.
+func (m Help) getContentLines() []string {
+	content := m.renderContent()
+	return strings.Split(content, "\n")
+}
+
 // View renders the help overlay.
 func (m Help) View() string {
 	if !m.visible {
 		return ""
 	}
 
-	containerStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(m.theme.Colors().Border).
-		Width(m.width).
-		Height(m.height)
+	if m.width == 0 || m.height == 0 {
+		return ""
+	}
 
 	content := m.renderContent()
-	return containerStyle.Render(content)
+	lines := strings.Split(content, "\n")
+
+	// Border + padding alır 4 satır (top border + padding + bottom padding + bottom border)
+	innerHeight := m.height - 4
+	if innerHeight < 1 {
+		innerHeight = 1
+	}
+
+	totalLines := len(lines)
+	maxOffset := totalLines - innerHeight
+	if maxOffset < 0 {
+		maxOffset = 0
+	}
+
+	scrollOffset := m.scrollOffset
+	if scrollOffset > maxOffset {
+		scrollOffset = maxOffset
+	}
+
+	end := scrollOffset + innerHeight
+	if end > totalLines {
+		end = totalLines
+	}
+
+	visibleLines := lines[scrollOffset:end]
+
+	// İçeriği tam genişliğe pad et
+	innerWidth := m.width - 6 // border + padding
+	if innerWidth < 0 {
+		innerWidth = 0
+	}
+	for i, line := range visibleLines {
+		if len(line) < innerWidth {
+			visibleLines[i] = line + strings.Repeat(" ", innerWidth-len(line))
+		}
+	}
+
+	scrollIndicator := ""
+	if totalLines > innerHeight {
+		pct := 0
+		if maxOffset > 0 {
+			pct = scrollOffset * 100 / maxOffset
+		}
+		scrollIndicator = fmt.Sprintf(" [%d%%] j/k: scroll", pct)
+	}
+
+	visibleContent := strings.Join(visibleLines, "\n")
+
+	titleLine := fmt.Sprintf("Sieve Help%s", scrollIndicator)
+
+	borderStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(m.theme.Colors().Highlight).
+		Padding(0, 2).
+		Width(m.width - 2).
+		Background(m.theme.Colors().Background).
+		Foreground(m.theme.Colors().Foreground)
+
+	titleStyle := lipgloss.NewStyle().
+		Foreground(m.theme.Colors().Highlight).
+		Bold(true).
+		Width(m.width - 6).
+		Align(lipgloss.Center)
+
+	body := titleStyle.Render(titleLine) + "\n\n" + visibleContent
+
+	return borderStyle.Render(body)
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 // renderContent renders the help content.
 func (m Help) renderContent() string {
-	titleStyle := lipgloss.NewStyle().
-		Foreground(m.theme.Colors().Foreground).
-		Bold(true).
-		Underline(true)
-
 	var builder strings.Builder
-
-	builder.WriteString(titleStyle.Render("Sieve - Help"))
-	builder.WriteString("\n\n")
 
 	builder.WriteString(m.renderSection("Navigation", []keyBinding{
 		{"j / ↓", "Scroll down"},
@@ -98,8 +202,8 @@ func (m Help) renderContent() string {
 		{"/", "Search"},
 		{"n", "Next search result"},
 		{"N", "Previous search result"},
-		{"f", "Filter"},
-		{"F", "Clear filter"},
+		{"f", "Filter expression"},
+		{"Esc", "Clear filter/Cancel"},
 	}))
 
 	builder.WriteString("\n")
@@ -114,21 +218,44 @@ func (m Help) renderContent() string {
 
 	builder.WriteString("\n")
 	builder.WriteString(m.renderSection("View & Actions", []keyBinding{
-		{"Enter", "Expand/Collapse entry"},
+		{"Enter", "View log details"},
 		{"Tab", "Toggle sidebar"},
 		{"d", "Toggle dashboard"},
+		{"?", "Toggle help"},
 		{"Esc", "Close overlay / exit mode"},
 	}))
 
 	builder.WriteString("\n")
 	builder.WriteString(m.renderSection("File & Program", []keyBinding{
-		{"r", "Refresh"},
-		{"f (in tail mode)", "Toggle follow"},
+		{"r", "Refresh file"},
+		{"F", "Toggle follow mode"},
+		{"Ctrl+C", "Force quit"},
 		{"q", "Quit"},
-		{"?", "Toggle this help"},
 	}))
 
+	builder.WriteString("\n")
+	builder.WriteString(m.renderFilterExamples())
+
 	return builder.String()
+}
+
+func (m Help) renderFilterExamples() string {
+	exampleStyle := lipgloss.NewStyle().
+		Foreground(m.theme.Colors().Value).
+		Italic(true)
+
+	return `Filter Examples:
+  .level >= 40              Show warn/error/fatal logs
+  .service == "api"         Filter by service name
+  .msg contains "error"      Search in message
+  .duration_ms > 1000        Numeric comparison
+  .status >= 500            HTTP status filter
+
+Operators:
+  ==, !=, >, <, >=, <=    Comparison
+  contains                  Text contains
+  matches                   Regex match
+  and, or, not             Logical` + "\n" + exampleStyle.Render("Press Enter to apply filter, Esc to cancel")
 }
 
 // renderSection renders a help section.

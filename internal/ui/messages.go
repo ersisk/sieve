@@ -1,13 +1,15 @@
 package ui
 
 import (
+	"time"
+
 	"github.com/ersanisk/sieve/pkg/logentry"
 )
 
 // LogSelectedMsg is sent when a log entry is selected.
 type LogSelectedMsg struct {
 	Entry logentry.Entry
-	Index  int
+	Index int
 }
 
 // ScrollUpMsg is sent to scroll up.
@@ -22,6 +24,9 @@ type ScrollDownMsg struct {
 
 // ScrollToTopMsg is sent to scroll to top.
 type ScrollToTopMsg struct{}
+
+// ScrollToBottomMsg is sent to scroll to bottom.
+type ScrollToBottomMsg struct{}
 
 // ScrollToLineMsg is sent to scroll to a specific line.
 type ScrollToLineMsg struct {
@@ -162,5 +167,4 @@ type ErrorMsg struct {
 // LoadFileMsg is sent to load a file.
 type LoadFileMsg struct {
 	Path string
-}
 }

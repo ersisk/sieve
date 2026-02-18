@@ -363,3 +363,11 @@ func (m *MockTheme) BorderStyle() lipgloss.Style {
 func (m *MockTheme) HighlightStyle() lipgloss.Style {
 	return lipgloss.NewStyle()
 }
+
+func (m *MockTheme) ErrorStyle() lipgloss.Style {
+	return lipgloss.NewStyle()
+}
+
+func (m *MockTheme) InfoStyle() lipgloss.Style {
+	return lipgloss.NewStyle()
+}

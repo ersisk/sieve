@@ -260,6 +260,7 @@ func (m LogView) renderEntry(index int) string {
 		line.WriteString(m.renderExpandedFields(entry, isSelected))
 	}
 
+	line.WriteString("\n")
 	return line.String()
 }
 
