@@ -384,7 +384,7 @@ make build
 
 ## 🗺️ Roadmap
 
-- [ ] Core JSON log viewing with colorization
+- [X] Core JSON log viewing with colorization
 - [ ] Live tail mode (`-f`)
 - [ ] Fuzzy file finder
 - [ ] Advanced filtering engine

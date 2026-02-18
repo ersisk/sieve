@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/ersanisk/sieve/internal/filter"
+	"github.com/ersanisk/sieve/internal/parser"
 	"github.com/ersanisk/sieve/internal/search"
 	"github.com/ersanisk/sieve/internal/theme"
 	"github.com/ersanisk/sieve/internal/ui"
@@ -42,31 +43,37 @@ type Model struct {
 	searchQuery   string
 	searchResults []search.SearchResult
 	searchIndex   int
+	// follow state
+	followSize   int64
+	followParser *parser.Parser
 }
 
-func NewModel(filePath string, themeName string) Model {
+func NewModel(filePath string, themeName string, followMode bool) Model {
 	theme := getTheme(themeName)
 
-	return Model{
-		logView:     ui.NewLogView(theme),
-		statusBar:   ui.NewStatusBar(theme),
-		searchBar:   ui.NewSearchBar(theme),
-		filterBar:   ui.NewFilterBar(theme),
-		sidebar:     ui.NewSidebar(theme),
-		help:        ui.NewHelp(theme),
-		treeView:    ui.NewTreeView(theme),
-		dashboard:   ui.NewDashboard(theme),
-		logDetail:   ui.NewLogDetail(theme),
-		keyMap:      DefaultKeyMap(),
-		theme:       theme,
-		entries:     []logentry.Entry{},
-		filtered:    []logentry.Entry{},
-		mode:        "view",
-		loading:     false,
-		filePath:    filePath,
-		followMode:  false,
-		levelFilter: logentry.Unknown,
+	m := Model{
+		logView:      ui.NewLogView(theme),
+		statusBar:    ui.NewStatusBar(theme),
+		searchBar:    ui.NewSearchBar(theme),
+		filterBar:    ui.NewFilterBar(theme),
+		sidebar:      ui.NewSidebar(theme),
+		help:         ui.NewHelp(theme),
+		treeView:     ui.NewTreeView(theme),
+		dashboard:    ui.NewDashboard(theme),
+		logDetail:    ui.NewLogDetail(theme),
+		keyMap:       DefaultKeyMap(),
+		theme:        theme,
+		entries:      []logentry.Entry{},
+		filtered:     []logentry.Entry{},
+		mode:         "view",
+		loading:      false,
+		filePath:     filePath,
+		followMode:   followMode,
+		levelFilter:  logentry.Unknown,
+		followParser: parser.NewParser(),
 	}
+	m.statusBar.SetFollowing(followMode)
+	return m
 }
 
 func getTheme(name string) theme.Theme {
@@ -168,6 +175,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.statusBar.SetFilePath(msg.Path)
 		m.statusBar.SetTotalLines(len(msg.Entries))
 		m.loading = false
+		// follow için mevcut dosya boyutunu kaydet
+		if info, err := os.Stat(msg.Path); err == nil {
+			m.followSize = info.Size()
+		}
 		return m, tickCmd()
 	case ui.SearchInputMsg:
 		m.searchBar.SetValue(msg.Query)
@@ -231,6 +242,26 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ui.ScrollToBottomMsg:
 		m.logView.ScrollToBottom()
 		m.updateSelectedEntry()
+		return m, tickCmd()
+	case ui.TickMsg:
+		if m.followMode && m.filePath != "" {
+			return m, tea.Batch(tickCmd(), followCmd(m.filePath, m.followSize, m.followParser))
+		}
+		return m, tickCmd()
+	case NewLinesMsg:
+		if len(msg.Entries) > 0 {
+			// followSize'ı güncelle
+			if info, err := os.Stat(m.filePath); err == nil {
+				m.followSize = info.Size()
+			}
+			m.entries = append(m.entries, msg.Entries...)
+			m.filtered = append(m.filtered, msg.Entries...)
+			m.logView.SetEntries(m.filtered)
+			m.statusBar.SetTotalLines(len(m.filtered))
+			// otomatik en alta kaydır
+			m.logView.ScrollToBottom()
+			m.updateSelectedEntry()
+		}
 		return m, tickCmd()
 	}
 

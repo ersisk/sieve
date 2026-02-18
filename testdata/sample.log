@@ -17,3 +17,5 @@
 {"level":"info","msg":"Graceful shutdown initiated","ts":"2024-01-15T10:00:40Z","service":"api","active_connections":12}
 {"level":"info","msg":"Connections drained","ts":"2024-01-15T10:00:42Z","service":"api","duration_ms":2000}
 {"level":"info","msg":"Server stopped","ts":"2024-01-15T10:00:42Z","service":"api"}
+{"level":"error","msg":"Authentication failed","ts":"2024-01-15T10:00:30Z","service":"auth","user_id":"usr_789","reason":"invalid_password","ip":"192.168.1.100"}
+{"level":"error","msg":"Authentication failed","ts":"2024-01-15T10:00:30Z","service":"auth","user_id":"usr_789","reason":"invalid_password","ip":"192.168.1.100"}

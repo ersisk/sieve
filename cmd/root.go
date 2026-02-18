@@ -47,7 +47,7 @@ func NewRootCmd(version, buildTime string) *cobra.Command {
 				t = theme.Get("default")
 			}
 
-			model := app.NewModel(filePath, appCfg.Theme)
+			model := app.NewModel(filePath, appCfg.Theme, appCfg.Follow)
 			program := tea.NewProgram(model)
 
 			if _, err := program.Run(); err != nil {
