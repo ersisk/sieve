@@ -5,7 +5,7 @@
 Sieve is a modern TUI (Terminal User Interface) application built with Go and [Bubble Tea](https://github.com/charmbracelet/bubbletea) that transforms the way you interact with JSON logs. Filter, search, follow, and analyze your logs — all from the comfort of your terminal.
 
 ![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat-square&logo=go)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![License](https://img.shields.io/badge/License-Apache-green?style=flat-square)
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-blue?style=flat-square)
 
 ---
@@ -70,7 +70,7 @@ Sieve is a modern TUI (Terminal User Interface) application built with Go and [B
 ### Using Go
 
 ```bash
-go install github.com/yourusername/sieve@latest
+go install github.com/ersanisk/sieve@latest
 ```
 
 ### Homebrew (macOS / Linux)
@@ -384,11 +384,11 @@ make build
 
 ## 🗺️ Roadmap
 
-- [x] Core JSON log viewing with colorization
-- [x] Live tail mode (`-f`)
-- [x] Fuzzy file finder
-- [x] Advanced filtering engine
-- [x] Vim-style keybindings
+- [ ] Core JSON log viewing with colorization
+- [ ] Live tail mode (`-f`)
+- [ ] Fuzzy file finder
+- [ ] Advanced filtering engine
+- [ ] Vim-style keybindings
 - [ ] Remote log source support (SSH, S3)
 - [ ] Log format auto-detection (logfmt, CLF, CSV)
 - [ ] Export filtered results to file
@@ -402,10 +402,10 @@ make build
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache 2.0 License — see the [LICENSE](LICENSE) file for details.
 
 ---
 
 <p align="center">
   Built with ❤️ and <a href="https://github.com/charmbracelet/bubbletea">Bubble Tea</a>
-</p>****
+</p>

@@ -1,0 +1,64 @@
+# golangci-lint configuration — Sieve
+
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gofmt
+    - goimports
+    - misspell
+    - unconvert
+    - unparam
+    - revive
+    - errname
+    - errorlint
+    - gocritic
+    - gosec
+    - prealloc
+    - noctx
+
+linters-settings:
+  errcheck:
+    check-blank: true
+  goimports:
+    local-prefixes: github.com/yourusername/sieve
+  revive:
+    rules:
+      - name: exported
+        arguments: [checkPrivateReceivers]
+      - name: blank-imports
+      - name: context-as-argument
+      - name: error-return
+      - name: error-strings
+      - name: increment-decrement
+      - name: var-naming
+      - name: package-comments
+        disabled: true
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+  gosec:
+    excludes:
+      - G104  # unhandled errors (covered by errcheck)
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gosec
+        - errcheck
+    - path: testdata/
+      linters:
+        - all
+  max-issues-per-linter: 50
+  max-same-issues: 5

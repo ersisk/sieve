@@ -1,0 +1,4 @@
+{"level":"error","msg":"Stack trace captured","ts":"2024-01-15T10:00:00Z","service":"api","stack":"goroutine 1 [running]:\nmain.handler()\n\t/app/main.go:42 +0x1a\nnet/http.HandlerFunc.ServeHTTP()\n\t/usr/local/go/src/net/http/server.go:2136 +0x29"}
+{"level":"info","msg":"Multi-line message\nwith embedded newlines\nfor testing purposes","ts":"2024-01-15T10:00:01Z","service":"test"}
+{"level":"warn","msg":"Large payload received","ts":"2024-01-15T10:00:02Z","service":"api","body":{"users":[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"},{"id":3,"name":"Charlie"}],"total":3,"page":1}}
+{"level":"debug","msg":"Query plan","ts":"2024-01-15T10:00:03Z","service":"db","plan":"Seq Scan on users\n  Filter: (age > 18)\n  Rows Removed by Filter: 150\nPlanning Time: 0.05 ms\nExecution Time: 1.23 ms"}

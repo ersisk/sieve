@@ -1,0 +1,76 @@
+services:
+  # Build and run all tests
+  test:
+    build: .
+    volumes:
+      - .:/app
+    command: >
+      sh -c "go mod tidy &&
+             go build ./... &&
+             go test -v -race ./... &&
+             go vet ./... &&
+             echo '==> All checks passed!'"
+
+  # Build the binary
+  build:
+    build: .
+    volumes:
+      - .:/app
+    command: >
+      sh -c "go mod tidy &&
+             go build -ldflags '-s -w' -o sieve . &&
+             echo '==> Build successful: ./sieve'"
+
+  # Run benchmarks
+  bench:
+    build: .
+    volumes:
+      - .:/app
+    command: >
+      sh -c "go mod tidy && go test -bench=. -benchmem ./..."
+
+  # Run linter
+  lint:
+    build: .
+    volumes:
+      - .:/app
+    command: >
+      sh -c "go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest &&
+             go mod tidy &&
+             golangci-lint run"
+
+  # Full CI pipeline
+  ci:
+    build: .
+    volumes:
+      - .:/app
+    command: >
+      sh -c "go mod tidy &&
+             echo '==> Checking format...' &&
+             test -z \"$$(gofmt -d .)\" &&
+             echo '==> Running vet...' &&
+             go vet ./... &&
+             echo '==> Running tests...' &&
+             go test -race ./... &&
+             echo '==> Building...' &&
+             go build ./... &&
+             echo '==> All CI checks passed!'"
+
+  # Interactive shell for development
+  dev:
+    build: .
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+    command: sh
+
+  # Run sieve with sample data
+  run:
+    build: .
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+    command: >
+      sh -c "go mod tidy && go build -o sieve . && ./sieve testdata/sample.log"

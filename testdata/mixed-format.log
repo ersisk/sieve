@@ -1,0 +1,10 @@
+{"level":"info","msg":"Application started","ts":"2024-01-15T10:00:00Z"}
+2024-01-15 10:00:01 INFO  Plain text log line here
+{"level":"debug","msg":"Processing request","ts":"2024-01-15T10:00:02Z","request_id":"req-001"}
+[2024-01-15T10:00:03Z] WARN: This is a bracketed log format
+{"level":"error","msg":"Database timeout","ts":"2024-01-15T10:00:04Z","timeout_ms":5000}
+Just a random line with no structure
+--- separator line ---
+{"level":"info","msg":"Recovery complete","ts":"2024-01-15T10:00:05Z","recovered":true}
+ERROR 2024-01-15 10:00:06 Something went wrong in the legacy system
+{"level":"warn","msg":"Deprecated API called","ts":"2024-01-15T10:00:07Z","endpoint":"/api/v0/users"}
