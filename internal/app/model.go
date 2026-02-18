@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/ersanisk/sieve/internal/filter"
+	"github.com/ersanisk/sieve/internal/search"
 	"github.com/ersanisk/sieve/internal/theme"
 	"github.com/ersanisk/sieve/internal/ui"
 	"github.com/ersanisk/sieve/pkg/logentry"
@@ -37,6 +38,10 @@ type Model struct {
 	levelFilter   logentry.Level
 	filter        *filter.CompiledFilter
 	filterExpr    string
+	// search state
+	searchQuery   string
+	searchResults []search.SearchResult
+	searchIndex   int
 }
 
 func NewModel(filePath string, themeName string) Model {
@@ -168,7 +173,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.searchBar.SetValue(msg.Query)
 		return m, tickCmd()
 	case ui.SearchSubmitMsg:
-		return m, tickCmd()
+		return m.applySearch(m.searchBar.GetValue())
+	case ui.SearchNextMsg:
+		return m.searchNext()
+	case ui.SearchPrevMsg:
+		return m.searchPrev()
 	case ui.FilterInputMsg:
 		m.filterBar.SetValue(msg.Expression)
 		return m, tickCmd()
@@ -176,7 +185,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.applyFilter(m.filterBar.GetValue())
 	case ui.SetLevelFilterMsg:
 		m.levelFilter = msg.Level
-		return m, tickCmd()
+		return m.applyLevelFilter()
 	case ui.ToggleHelpMsg:
 		m.help.Show()
 		m.mode = "help"
@@ -272,6 +281,16 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		return m, tickCmd()
 	}
 
+	// Esc: search modundan çık
+	if msg.Type == tea.KeyEsc && m.searchQuery != "" {
+		m.searchQuery = ""
+		m.searchResults = nil
+		m.searchIndex = 0
+		m.logView.SetSearchQuery("")
+		m.statusBar.SetInfo("")
+		return m, tickCmd()
+	}
+
 	switch msg.String() {
 	case m.keyMap.Quit.key.String():
 		return m, tea.Quit
@@ -305,6 +324,10 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		m.searchBar.Show()
 		m.mode = "search"
 		return m, tickCmd()
+	case m.keyMap.SearchNext.key.String():
+		return m.searchNext()
+	case m.keyMap.SearchPrev.key.String():
+		return m.searchPrev()
 	case m.keyMap.Filter.key.String():
 		m.filterBar.Show()
 		m.mode = "filter"
@@ -332,23 +355,43 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		m.statusBar.SetFollowing(m.followMode)
 		return m, tickCmd()
 	case m.keyMap.LevelDebug.key.String():
-		m.levelFilter = logentry.Debug
-		return m, tickCmd()
+		if m.levelFilter == logentry.Debug {
+			m.levelFilter = logentry.Unknown
+		} else {
+			m.levelFilter = logentry.Debug
+		}
+		return m.applyLevelFilter()
 	case m.keyMap.LevelInfo.key.String():
-		m.levelFilter = logentry.Info
-		return m, tickCmd()
+		if m.levelFilter == logentry.Info {
+			m.levelFilter = logentry.Unknown
+		} else {
+			m.levelFilter = logentry.Info
+		}
+		return m.applyLevelFilter()
 	case m.keyMap.LevelWarn.key.String():
-		m.levelFilter = logentry.Warn
-		return m, tickCmd()
+		if m.levelFilter == logentry.Warn {
+			m.levelFilter = logentry.Unknown
+		} else {
+			m.levelFilter = logentry.Warn
+		}
+		return m.applyLevelFilter()
 	case m.keyMap.LevelError.key.String():
-		m.levelFilter = logentry.Error
-		return m, tickCmd()
+		if m.levelFilter == logentry.Error {
+			m.levelFilter = logentry.Unknown
+		} else {
+			m.levelFilter = logentry.Error
+		}
+		return m.applyLevelFilter()
 	case m.keyMap.LevelFatal.key.String():
-		m.levelFilter = logentry.Fatal
-		return m, tickCmd()
+		if m.levelFilter == logentry.Fatal {
+			m.levelFilter = logentry.Unknown
+		} else {
+			m.levelFilter = logentry.Fatal
+		}
+		return m.applyLevelFilter()
 	case m.keyMap.LevelNone.key.String():
 		m.levelFilter = logentry.Unknown
-		return m, tickCmd()
+		return m.applyLevelFilter()
 	case m.keyMap.Refresh.key.String():
 		return m, tea.Batch(tickCmd(), loadFileCmd(m.filePath), tickCmd())
 	case m.keyMap.Expand.key.String():
@@ -424,6 +467,48 @@ func (m Model) renderLoading() string {
 	return style.Render("Loading...")
 }
 
+func (m Model) applyLevelFilter() (Model, tea.Cmd) {
+	if m.levelFilter == logentry.Unknown {
+		// No level filter — restore from expression filter or all entries
+		if m.filter != nil {
+			var filtered []logentry.Entry
+			for _, entry := range m.entries {
+				matches, err := m.filter.Evaluate(entry)
+				if err == nil && matches {
+					filtered = append(filtered, entry)
+				}
+			}
+			m.filtered = filtered
+		} else {
+			m.filtered = m.entries
+		}
+		m.logView.SetEntries(m.filtered)
+		m.statusBar.SetTotalLines(len(m.filtered))
+		m.statusBar.SetInfo(fmt.Sprintf("Level filter cleared — %d entries", len(m.filtered)))
+		return m, tickCmd()
+	}
+
+	var filtered []logentry.Entry
+	for _, entry := range m.entries {
+		// Apply expression filter first if active
+		if m.filter != nil {
+			matches, err := m.filter.Evaluate(entry)
+			if err != nil || !matches {
+				continue
+			}
+		}
+		if entry.Level == m.levelFilter {
+			filtered = append(filtered, entry)
+		}
+	}
+
+	m.filtered = filtered
+	m.logView.SetEntries(m.filtered)
+	m.statusBar.SetTotalLines(len(m.filtered))
+	m.statusBar.SetInfo(fmt.Sprintf("Level: %s — %d/%d entries", m.levelFilter.String(), len(filtered), len(m.entries)))
+	return m, tickCmd()
+}
+
 func (m Model) applyFilter(expr string) (Model, tea.Cmd) {
 	if expr == "" {
 		m.filter = nil
@@ -462,5 +547,68 @@ func (m Model) applyFilter(expr string) (Model, tea.Cmd) {
 	m.statusBar.SetTotalLines(len(m.filtered))
 	m.statusBar.SetInfo(fmt.Sprintf("Filtered: %d/%d entries", len(filtered), len(m.entries)))
 
+	return m, tickCmd()
+}
+
+func (m Model) applySearch(query string) (Model, tea.Cmd) {
+	if query == "" {
+		m.searchQuery = ""
+		m.searchResults = nil
+		m.searchIndex = 0
+		m.statusBar.SetInfo("")
+		return m, tickCmd()
+	}
+
+	m.searchQuery = query
+	results := search.SmartMatch(m.filtered, query)
+	m.searchResults = results
+	m.searchIndex = 0
+	m.logView.SetSearchQuery(query)
+
+	if len(results) == 0 {
+		m.statusBar.SetInfo(fmt.Sprintf("No results for %q", query))
+		return m, tickCmd()
+	}
+
+	// İlk eşleşen satıra git
+	m.jumpToSearchResult(0)
+	m.statusBar.SetInfo(fmt.Sprintf("Match 1/%d for %q", len(results), query))
+	return m, tickCmd()
+}
+
+func (m *Model) jumpToSearchResult(idx int) {
+	if len(m.searchResults) == 0 {
+		return
+	}
+	result := m.searchResults[idx]
+	// filtered slice içindeki gerçek index'i bul
+	for i, entry := range m.filtered {
+		if entry.Raw == result.Entry.Raw && entry.Timestamp == result.Entry.Timestamp {
+			m.logView.SetSelected(i)
+			m.selectedEntry = entry
+			m.sidebar.SetEntry(entry)
+			m.statusBar.SetSelected(i)
+			return
+		}
+	}
+}
+
+func (m Model) searchNext() (Model, tea.Cmd) {
+	if len(m.searchResults) == 0 {
+		return m, tickCmd()
+	}
+	m.searchIndex = (m.searchIndex + 1) % len(m.searchResults)
+	m.jumpToSearchResult(m.searchIndex)
+	m.statusBar.SetInfo(fmt.Sprintf("Match %d/%d for %q", m.searchIndex+1, len(m.searchResults), m.searchQuery))
+	return m, tickCmd()
+}
+
+func (m Model) searchPrev() (Model, tea.Cmd) {
+	if len(m.searchResults) == 0 {
+		return m, tickCmd()
+	}
+	m.searchIndex = (m.searchIndex - 1 + len(m.searchResults)) % len(m.searchResults)
+	m.jumpToSearchResult(m.searchIndex)
+	m.statusBar.SetInfo(fmt.Sprintf("Match %d/%d for %q", m.searchIndex+1, len(m.searchResults), m.searchQuery))
 	return m, tickCmd()
 }

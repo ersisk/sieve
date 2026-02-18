@@ -10,6 +10,31 @@ import (
 	"github.com/ersanisk/sieve/pkg/logentry"
 )
 
+// highlightQuery highlights all occurrences of query in text using a bold+color style.
+func highlightQuery(text, query string, hlStyle lipgloss.Style) string {
+	if query == "" {
+		return text
+	}
+	lower := strings.ToLower(text)
+	lowerQ := strings.ToLower(query)
+	if !strings.Contains(lower, lowerQ) {
+		return text
+	}
+
+	var result strings.Builder
+	for len(text) > 0 {
+		idx := strings.Index(strings.ToLower(text), lowerQ)
+		if idx < 0 {
+			result.WriteString(text)
+			break
+		}
+		result.WriteString(text[:idx])
+		result.WriteString(hlStyle.Render(text[idx : idx+len(query)]))
+		text = text[idx+len(query):]
+	}
+	return result.String()
+}
+
 // LogView displays log entries with virtual scrolling.
 type LogView struct {
 	entries     []logentry.Entry
@@ -20,6 +45,7 @@ type LogView struct {
 	theme       theme.Theme
 	lineNumbers bool
 	expanded    map[int]bool
+	searchQuery string
 }
 
 // NewLogView creates a new LogView.
@@ -157,6 +183,11 @@ func (m *LogView) SetTheme(theme theme.Theme) {
 	m.theme = theme
 }
 
+// SetSearchQuery sets the current search query for highlighting.
+func (m *LogView) SetSearchQuery(query string) {
+	m.searchQuery = query
+}
+
 // ToggleLineNumbers toggles line numbers.
 func (m *LogView) ToggleLineNumbers() {
 	m.lineNumbers = !m.lineNumbers
@@ -249,7 +280,17 @@ func (m LogView) renderEntry(index int) string {
 		messageStyle = messageStyle.Background(m.theme.Colors().Highlight).Foreground(m.theme.Colors().Background).Bold(true)
 	}
 
-	message := messageStyle.Render(truncateText(entry.Message, m.width-40))
+	rawMsg := truncateText(entry.Message, m.width-40)
+	var message string
+	if m.searchQuery != "" && !isSelected {
+		hlStyle := lipgloss.NewStyle().
+			Foreground(m.theme.Colors().Background).
+			Background(m.theme.Colors().Warn).
+			Bold(true)
+		message = messageStyle.Render(highlightQuery(rawMsg, m.searchQuery, hlStyle))
+	} else {
+		message = messageStyle.Render(rawMsg)
+	}
 
 	line.WriteString(timestamp)
 	line.WriteString(level)
