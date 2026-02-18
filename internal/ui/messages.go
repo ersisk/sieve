@@ -1,15 +1,13 @@
 package ui
 
 import (
-	"time"
-
 	"github.com/ersanisk/sieve/pkg/logentry"
 )
 
 // LogSelectedMsg is sent when a log entry is selected.
 type LogSelectedMsg struct {
 	Entry logentry.Entry
-	Index int
+	Index  int
 }
 
 // ScrollUpMsg is sent to scroll up.
@@ -25,9 +23,6 @@ type ScrollDownMsg struct {
 // ScrollToTopMsg is sent to scroll to top.
 type ScrollToTopMsg struct{}
 
-// ScrollToBottomMsg is sent to scroll to bottom.
-type ScrollToBottomMsg struct{}
-
 // ScrollToLineMsg is sent to scroll to a specific line.
 type ScrollToLineMsg struct {
 	Line int
@@ -39,9 +34,7 @@ type SearchInputMsg struct {
 }
 
 // SearchSubmitMsg is sent when search is submitted.
-type SearchSubmitMsg struct {
-	Query string
-}
+type SearchSubmitMsg struct{}
 
 // SearchClearMsg is sent to clear search.
 type SearchClearMsg struct{}
@@ -58,9 +51,7 @@ type FilterInputMsg struct {
 }
 
 // FilterSubmitMsg is sent when filter is submitted.
-type FilterSubmitMsg struct {
-	Expression string
-}
+type FilterSubmitMsg struct{}
 
 // FilterClearMsg is sent to clear filter.
 type FilterClearMsg struct{}
@@ -82,7 +73,7 @@ type SetLevelFilterMsg struct {
 	Level logentry.Level
 }
 
-// ClearLevelFilterMsg is sent to clear level filter.
+// FilterSetPresetMsg is sent to set a filter preset.
 type FilterSetPresetMsg struct {
 	Preset string
 }
@@ -101,10 +92,10 @@ type EnterModeMsg struct {
 // ExitModeMsg is sent to exit current mode.
 type ExitModeMsg struct{}
 
-// QuitMsg is sent to quit the application.
+// QuitMsg is sent to quit.
 type QuitMsg struct{}
 
-// RefreshMsg is sent to refresh the view.
+// RefreshMsg is sent to refresh view.
 type RefreshMsg struct{}
 
 // FileLoadedMsg is sent when a file is loaded.
@@ -125,6 +116,9 @@ type ExpandNodeMsg struct {
 }
 
 // CollapseNodeMsg is sent to collapse a tree node.
+type CollapseNodeMsg struct{}
+
+// ExpandAllMsg is sent to expand all tree nodes.
 type ExpandAllMsg struct{}
 
 // CollapseAllMsg is sent to collapse all tree nodes.
@@ -147,7 +141,7 @@ type GoToBookmarkMsg struct {
 
 // TickMsg is sent periodically for animations.
 type TickMsg struct {
-	time.Time
+	Time time.Time
 }
 
 // LoadingStartedMsg is sent when loading starts.
@@ -163,4 +157,10 @@ type LoadingFinishedMsg struct {
 // ErrorMsg is sent when an error occurs.
 type ErrorMsg struct {
 	Error error
+}
+
+// LoadFileMsg is sent to load a file.
+type LoadFileMsg struct {
+	Path string
+}
 }
