@@ -150,19 +150,40 @@ nfpms:
       - src: README.md
         dst: /usr/share/doc/sieve/README.md
 
-scoops:
-  - name: sieve
-    repository:
-      owner: ersisk
-      name: scoop-bucket
-      token: "{{ .Env.SCOOP_BUCKET_GITHUB_TOKEN }}"
-    homepage: "https://github.com/ersisk/sieve"
-    description: "Blazing-fast, multi-platform JSON log viewer for your terminal"
-    license: "Apache-2.0"
-    commit_author:
-      name: goreleaserbot
-      email: bot@goreleaser.com
-    commit_msg_template: "Scoop update for {{ .ProjectName }} version {{ .Tag }}"
+# Disabled - handled by manual workflow job in .github/workflows/release.yml
+# brews:
+#   - name: sieve
+#     repository:
+#       owner: ersisk
+#       name: homebrew-tap
+#       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+#     directory: Formula
+#     homepage: "https://github.com/ersisk/sieve"
+#     description: "Blazing-fast, multi-platform JSON log viewer for your terminal"
+#     license: "Apache-2.0"
+#     commit_author:
+#       name: goreleaserbot
+#       email: bot@goreleaser.com
+#     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+#     install: |
+#       bin.install "sieve"
+#     test: |
+#       system "#{bin}/sieve", "--version"
+
+# Disabled - scoop-bucket repository doesn't exist
+# scoops:
+#   - name: sieve
+#     repository:
+#       owner: ersisk
+#       name: scoop-bucket
+#       token: "{{ .Env.SCOOP_BUCKET_GITHUB_TOKEN }}"
+#     homepage: "https://github.com/ersisk/sieve"
+#     description: "Blazing-fast, multi-platform JSON log viewer for your terminal"
+#     license: "Apache-2.0"
+#     commit_author:
+#       name: goreleaserbot
+#       email: bot@goreleaser.com
+#     commit_msg_template: "Scoop update for {{ .ProjectName }} version {{ .Tag }}"
 
 sboms:
   - artifacts: archive
