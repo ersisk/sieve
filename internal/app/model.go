@@ -83,23 +83,6 @@ func getTheme(name string) theme.Theme {
 	return theme.Get("default")
 }
 
-func levelToInt(level logentry.Level) int {
-	switch level {
-	case logentry.Debug:
-		return 10
-	case logentry.Info:
-		return 30
-	case logentry.Warn:
-		return 40
-	case logentry.Error:
-		return 50
-	case logentry.Fatal:
-		return 60
-	default:
-		return 0
-	}
-}
-
 func (m Model) Init() tea.Cmd {
 	if m.filePath != "" {
 		return tea.Batch(tickCmd(), loadFileCmd(m.filePath))

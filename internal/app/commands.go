@@ -8,7 +8,6 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/ersanisk/sieve/internal/filter"
 	"github.com/ersanisk/sieve/internal/parser"
 	"github.com/ersanisk/sieve/internal/ui"
 	"github.com/ersanisk/sieve/pkg/logentry"
@@ -31,27 +30,6 @@ func loadFileCmd(path string) tea.Cmd {
 		}
 
 		return ui.FileLoadedMsg{Path: path, Entries: entries}
-	}
-}
-
-// searchCmd performs search on entries.
-func searchCmd(query string, entries []logentry.Entry) tea.Cmd {
-	return func() tea.Msg {
-		time.Sleep(10 * time.Millisecond)
-		return ui.RefreshMsg{}
-	}
-}
-
-// filterCmd applies filter to entries.
-func filterCmd(expr string, entries []logentry.Entry) tea.Cmd {
-	return func() tea.Msg {
-		_, err := filter.Parse(expr)
-		if err != nil {
-			return ui.ErrorMsg{Error: fmt.Errorf("failed to parse filter: %w", err)}
-		}
-
-		time.Sleep(10 * time.Millisecond)
-		return ui.RefreshMsg{}
 	}
 }
 

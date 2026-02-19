@@ -242,7 +242,7 @@ func (w *Watcher) Reopen() error {
 		return fmt.Errorf("failed to reopen reader: %w", err)
 	}
 
-	w.watcher.Remove(w.path)
+	_ = w.watcher.Remove(w.path)
 	if err := w.watcher.Add(w.path); err != nil {
 		return fmt.Errorf("failed to re-add file to watcher: %w", err)
 	}

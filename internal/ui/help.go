@@ -177,13 +177,6 @@ func (m Help) View() string {
 	return borderStyle.Render(body)
 }
 
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 // renderContent renders the help content.
 func (m Help) renderContent() string {
 	var builder strings.Builder

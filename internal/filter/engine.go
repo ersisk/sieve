@@ -20,8 +20,7 @@ type Evaluator func(val FieldValue) (any, error)
 
 // CompiledFilter is a compiled expression ready for evaluation.
 type CompiledFilter struct {
-	expr     Expr
-	evalFunc Evaluator
+	expr Expr
 }
 
 // Evaluate evaluates the compiled filter against an entry.

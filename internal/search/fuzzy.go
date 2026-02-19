@@ -119,7 +119,7 @@ func fuzzyMatchRunes(text, query []rune) (float64, []string) {
 
 	for tI < len(text) && qI < len(query) {
 		if text[tI] == query[qI] {
-			matchedPositions = append(matchedPositions, tI)
+			_ = append(matchedPositions, tI)
 			matched++
 			qI++
 		}

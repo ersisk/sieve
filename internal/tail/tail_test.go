@@ -308,7 +308,9 @@ func TestNewWatcher(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewWatcher() failed: %v", err)
 	}
-	defer watcher.Stop()
+	defer func() {
+		_ = watcher.Stop()
+	}()
 
 	if watcher.path != tmpPath {
 		t.Errorf("Watcher.path = %v, want %v", watcher.path, tmpPath)
@@ -516,7 +518,9 @@ func TestWatcher_PollImmediately(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewWatcher() failed: %v", err)
 	}
-	defer watcher.Stop()
+	defer func() {
+		_ = watcher.Stop()
+	}()
 
 	lines, err := watcher.PollImmediately()
 	if err != nil {
@@ -531,7 +535,9 @@ func TestWatcher_PollImmediately(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to open file: %v", err)
 	}
-	f.WriteString("test line\n")
+	if _, err := f.WriteString("test line\n"); err != nil {
+		t.Fatalf("Failed to write to file: %v", err)
+	}
 	f.Close()
 
 	lines, err = watcher.PollImmediately()

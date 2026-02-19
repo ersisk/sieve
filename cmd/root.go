@@ -42,9 +42,8 @@ func NewRootCmd(version, buildTime string) *cobra.Command {
 				appCfg.Follow = follow
 			}
 
-			t := theme.Get(appCfg.Theme)
-			if t == nil {
-				t = theme.Get("default")
+			if theme.Get(appCfg.Theme) == nil {
+				appCfg.Theme = "default"
 			}
 
 			model := app.NewModel(filePath, appCfg.Theme, appCfg.Follow)
