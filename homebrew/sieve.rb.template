@@ -1,0 +1,40 @@
+# Homebrew Formula Template for Sieve
+# This template is used as a reference for the homebrew-tap repository
+# GoReleaser automatically updates the formula in ersanisk/homebrew-tap
+
+class Sieve < Formula
+  desc "Blazing-fast, multi-platform JSON log viewer for your terminal"
+  homepage "https://github.com/ersanisk/sieve"
+  version "VERSION"
+  license "Apache-2.0"
+
+  on_macos do
+    on_intel do
+      url "https://github.com/ersanisk/sieve/releases/download/vVERSION/sieve_VERSION_darwin_amd64.tar.gz"
+      sha256 "SHA256_DARWIN_AMD64"
+    end
+    on_arm do
+      url "https://github.com/ersanisk/sieve/releases/download/vVERSION/sieve_VERSION_darwin_arm64.tar.gz"
+      sha256 "SHA256_DARWIN_ARM64"
+    end
+  end
+
+  on_linux do
+    on_intel do
+      url "https://github.com/ersanisk/sieve/releases/download/vVERSION/sieve_VERSION_linux_amd64.tar.gz"
+      sha256 "SHA256_LINUX_AMD64"
+    end
+    on_arm do
+      url "https://github.com/ersanisk/sieve/releases/download/vVERSION/sieve_VERSION_linux_arm64.tar.gz"
+      sha256 "SHA256_LINUX_ARM64"
+    end
+  end
+
+  def install
+    bin.install "sieve"
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/sieve --version")
+  end
+end

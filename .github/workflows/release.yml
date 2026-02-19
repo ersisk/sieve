@@ -1,0 +1,129 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  GO_VERSION: "1.24"
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run tests
+        run: go test -race ./...
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+
+  update-homebrew:
+    name: Update Homebrew Tap
+    runs-on: ubuntu-latest
+    needs: release
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout homebrew-tap
+        uses: actions/checkout@v4
+        with:
+          repository: ersanisk/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          path: homebrew-tap
+
+      - name: Get release info
+        id: release
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Download release checksums
+        run: |
+          curl -sL "https://github.com/ersanisk/sieve/releases/download/v${{ steps.release.outputs.version }}/checksums.txt" -o checksums.txt
+          cat checksums.txt
+
+      - name: Extract SHA256 checksums
+        id: sha
+        run: |
+          DARWIN_AMD64=$(grep "sieve_.*_darwin_amd64.tar.gz" checksums.txt | awk '{print $1}')
+          DARWIN_ARM64=$(grep "sieve_.*_darwin_arm64.tar.gz" checksums.txt | awk '{print $1}')
+          LINUX_AMD64=$(grep "sieve_.*_linux_amd64.tar.gz" checksums.txt | awk '{print $1}')
+          LINUX_ARM64=$(grep "sieve_.*_linux_arm64.tar.gz" checksums.txt | awk '{print $1}')
+          echo "darwin_amd64=$DARWIN_AMD64" >> $GITHUB_OUTPUT
+          echo "darwin_arm64=$DARWIN_ARM64" >> $GITHUB_OUTPUT
+          echo "linux_amd64=$LINUX_AMD64" >> $GITHUB_OUTPUT
+          echo "linux_arm64=$LINUX_ARM64" >> $GITHUB_OUTPUT
+
+      - name: Update Homebrew formula
+        run: |
+          cat > homebrew-tap/Formula/sieve.rb << 'EOF'
+          class Sieve < Formula
+            desc "Blazing-fast, multi-platform JSON log viewer for your terminal"
+            homepage "https://github.com/ersanisk/sieve"
+            version "${{ steps.release.outputs.version }}"
+            license "Apache-2.0"
+
+            on_macos do
+              on_intel do
+                url "https://github.com/ersanisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_darwin_amd64.tar.gz"
+                sha256 "${{ steps.sha.outputs.darwin_amd64 }}"
+              end
+              on_arm do
+                url "https://github.com/ersanisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_darwin_arm64.tar.gz"
+                sha256 "${{ steps.sha.outputs.darwin_arm64 }}"
+              end
+            end
+
+            on_linux do
+              on_intel do
+                url "https://github.com/ersanisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_linux_amd64.tar.gz"
+                sha256 "${{ steps.sha.outputs.linux_amd64 }}"
+              end
+              on_arm do
+                url "https://github.com/ersanisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_linux_arm64.tar.gz"
+                sha256 "${{ steps.sha.outputs.linux_arm64 }}"
+              end
+            end
+
+            def install
+              bin.install "sieve"
+            end
+
+            test do
+              assert_match version.to_s, shell_output("#{bin}/sieve --version")
+            end
+          end
+          EOF
+
+      - name: Commit and push formula
+        working-directory: homebrew-tap
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/sieve.rb
+          git commit -m "Update sieve to ${{ steps.release.outputs.tag }}"
+          git push

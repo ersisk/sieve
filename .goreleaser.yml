@@ -1,0 +1,181 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+
+version: 2
+
+project_name: sieve
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - id: sieve
+    main: .
+    binary: sieve
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.buildTime={{.Date}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: "New Features"
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: "Bug Fixes"
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: "Performance Improvements"
+      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: "Refactoring"
+      regexp: '^.*?refactor(\([[:word:]]+\))??!?:.+$'
+      order: 3
+    - title: "Other"
+      order: 999
+
+release:
+  github:
+    owner: ersanisk
+    name: sieve
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## Sieve {{ .Tag }}
+
+    Welcome to this new release of Sieve!
+  footer: |
+    ---
+
+    **Full Changelog**: https://github.com/ersanisk/sieve/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+    ### Installation
+
+    #### Homebrew (macOS / Linux)
+    ```bash
+    brew tap ersanisk/tap
+    brew install sieve
+    ```
+
+    #### Go Install
+    ```bash
+    go install github.com/ersanisk/sieve@{{ .Tag }}
+    ```
+
+    #### Download Binary
+    Download the appropriate binary for your platform from the assets below.
+
+brews:
+  - name: sieve
+    repository:
+      owner: ersanisk
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/ersanisk/sieve"
+    description: "Blazing-fast, multi-platform JSON log viewer for your terminal"
+    license: "Apache-2.0"
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    install: |
+      bin.install "sieve"
+    test: |
+      system "#{bin}/sieve", "--version"
+
+nfpms:
+  - id: packages
+    package_name: sieve
+    vendor: ersanisk
+    homepage: "https://github.com/ersanisk/sieve"
+    maintainer: "ersanisk <ersanisk@users.noreply.github.com>"
+    description: "Blazing-fast, multi-platform JSON log viewer for your terminal"
+    license: Apache-2.0
+    formats:
+      - deb
+      - rpm
+      - apk
+    bindir: /usr/bin
+    section: utils
+    priority: optional
+    contents:
+      - src: LICENSE
+        dst: /usr/share/doc/sieve/LICENSE
+      - src: README.md
+        dst: /usr/share/doc/sieve/README.md
+
+scoops:
+  - name: sieve
+    repository:
+      owner: ersanisk
+      name: scoop-bucket
+      token: "{{ .Env.SCOOP_BUCKET_GITHUB_TOKEN }}"
+    homepage: "https://github.com/ersanisk/sieve"
+    description: "Blazing-fast, multi-platform JSON log viewer for your terminal"
+    license: Apache-2.0
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "Scoop update for {{ .ProjectName }} version {{ .Tag }}"
+
+sboms:
+  - artifacts: archive
+
+signs:
+  - cmd: cosign
+    signature: "${artifact}.sig"
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - "--output-signature=${signature}"
+      - "--output-certificate=${certificate}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+    output: true
