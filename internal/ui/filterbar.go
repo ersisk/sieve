@@ -101,6 +101,14 @@ func (m FilterBar) Update(msg tea.Msg) (FilterBar, tea.Cmd) {
 		return m, nil
 	}
 
+	// ESC tuşunu textinput'a göndermeden önce kontrol et
+	if keyMsg, ok := msg.(tea.KeyMsg); ok {
+		if keyMsg.Type == tea.KeyEsc {
+			// ESC tuşunu consume etme, parent'a geçmesine izin ver
+			return m, nil
+		}
+	}
+
 	var cmd tea.Cmd
 	m.textInput, cmd = m.textInput.Update(msg)
 	return m, cmd
