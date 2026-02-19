@@ -23,7 +23,8 @@ type SearchBar struct {
 func NewSearchBar(theme theme.Theme) SearchBar {
 	ti := textinput.New()
 	ti.Placeholder = "Search..."
-	ti.Prompt = "/"
+	ti.Prompt = "/ "
+	ti.CharLimit = 200
 	ti.PromptStyle = lipgloss.NewStyle().Foreground(theme.Colors().Foreground)
 	ti.TextStyle = lipgloss.NewStyle().Foreground(theme.Colors().Foreground)
 	ti.PlaceholderStyle = lipgloss.NewStyle().Foreground(theme.Colors().Foreground)
@@ -81,7 +82,10 @@ func (m *SearchBar) Clear() {
 // SetSize sets the dimensions of the search bar.
 func (m *SearchBar) SetSize(width, height int) {
 	m.width = width
-	m.textInput.Width = width - 10
+	// Reserve space for prompt (2 chars: "/ ") and some padding
+	if width > 4 {
+		m.textInput.Width = width - 4
+	}
 }
 
 // SetTheme sets the theme.
