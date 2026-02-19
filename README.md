@@ -4,13 +4,13 @@
 
 Sieve is a modern TUI (Terminal User Interface) application built with Go and [Bubble Tea](https://github.com/charmbracelet/bubbletea) that transforms the way you interact with JSON logs. Filter, search, follow, and analyze your logs — all from the comfort of your terminal.
 
-[![CI](https://github.com/ersanisk/sieve/actions/workflows/ci.yml/badge.svg)](https://github.com/ersanisk/sieve/actions/workflows/ci.yml)
-[![Release](https://github.com/ersanisk/sieve/actions/workflows/release.yml/badge.svg)](https://github.com/ersanisk/sieve/actions/workflows/release.yml)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/ersanisk/sieve?style=flat-square&logo=go)](https://go.dev/)
-[![Go Report Card](https://goreportcard.com/badge/github.com/ersanisk/sieve?style=flat-square)](https://goreportcard.com/report/github.com/ersanisk/sieve)
-[![License](https://img.shields.io/github/license/ersanisk/sieve?style=flat-square)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/ersanisk/sieve?style=flat-square)](https://github.com/ersanisk/sieve/releases/latest)
-[![Homebrew](https://img.shields.io/badge/Homebrew-available-orange?style=flat-square&logo=homebrew)](https://github.com/ersanisk/homebrew-tap)
+[![CI](https://github.com/ersisk/sieve/actions/workflows/ci.yml/badge.svg)](https://github.com/ersisk/sieve/actions/workflows/ci.yml)
+[![Release](https://github.com/ersisk/sieve/actions/workflows/release.yml/badge.svg)](https://github.com/ersisk/sieve/actions/workflows/release.yml)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/ersisk/sieve?style=flat-square&logo=go)](https://go.dev/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ersisk/sieve?style=flat-square)](https://goreportcard.com/report/github.com/ersisk/sieve)
+[![License](https://img.shields.io/github/license/ersisk/sieve?style=flat-square)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/ersisk/sieve?style=flat-square)](https://github.com/ersisk/sieve/releases/latest)
+[![Homebrew](https://img.shields.io/badge/Homebrew-available-orange?style=flat-square&logo=homebrew)](https://github.com/ersisk/homebrew-tap)
 
 ---
 
@@ -75,26 +75,26 @@ Sieve is a modern TUI (Terminal User Interface) application built with Go and [B
 
 ```bash
 # Add the tap
-brew tap ersanisk/tap
+brew tap ersisk/tap
 
 # Install sieve
 brew install sieve
 
 # Or install directly
-brew install ersanisk/tap/sieve
+brew install ersisk/tap/sieve
 ```
 
 ### Using Go
 
 ```bash
-go install github.com/ersanisk/sieve@latest
+go install github.com/ersisk/sieve@latest
 ```
 
 ### Scoop (Windows)
 
 ```bash
 # Add the bucket (first time only)
-scoop bucket add ersanisk https://github.com/ersanisk/scoop-bucket
+scoop bucket add ersisk https://github.com/ersisk/scoop-bucket
 
 # Install sieve
 scoop install sieve
@@ -104,7 +104,7 @@ scoop install sieve
 
 ```bash
 # Download the latest .deb package
-curl -LO https://github.com/ersanisk/sieve/releases/latest/download/sieve_VERSION_linux_amd64.deb
+curl -LO https://github.com/ersisk/sieve/releases/latest/download/sieve_VERSION_linux_amd64.deb
 
 # Install
 sudo dpkg -i sieve_VERSION_linux_amd64.deb
@@ -114,7 +114,7 @@ sudo dpkg -i sieve_VERSION_linux_amd64.deb
 
 ```bash
 # Download the latest .rpm package
-curl -LO https://github.com/ersanisk/sieve/releases/latest/download/sieve_VERSION_linux_amd64.rpm
+curl -LO https://github.com/ersisk/sieve/releases/latest/download/sieve_VERSION_linux_amd64.rpm
 
 # Install
 sudo rpm -i sieve_VERSION_linux_amd64.rpm
@@ -124,7 +124,7 @@ sudo rpm -i sieve_VERSION_linux_amd64.rpm
 
 ```bash
 # Download the latest .apk package
-curl -LO https://github.com/ersanisk/sieve/releases/latest/download/sieve_VERSION_linux_amd64.apk
+curl -LO https://github.com/ersisk/sieve/releases/latest/download/sieve_VERSION_linux_amd64.apk
 
 # Install
 sudo apk add --allow-untrusted sieve_VERSION_linux_amd64.apk
@@ -133,28 +133,28 @@ sudo apk add --allow-untrusted sieve_VERSION_linux_amd64.apk
 ### From Source
 
 ```bash
-git clone https://github.com/ersanisk/sieve.git
+git clone https://github.com/ersisk/sieve.git
 cd sieve
 make build
 ```
 
 ### Pre-built Binaries
 
-Download the latest release for your platform from the [Releases](https://github.com/ersanisk/sieve/releases) page.
+Download the latest release for your platform from the [Releases](https://github.com/ersisk/sieve/releases) page.
 
 | Platform | Architecture | Download |
 |----------|--------------|----------|
-| Linux    | amd64        | [sieve_VERSION_linux_amd64.tar.gz](https://github.com/ersanisk/sieve/releases/latest) |
-| Linux    | arm64        | [sieve_VERSION_linux_arm64.tar.gz](https://github.com/ersanisk/sieve/releases/latest) |
-| macOS    | Intel        | [sieve_VERSION_darwin_amd64.tar.gz](https://github.com/ersanisk/sieve/releases/latest) |
-| macOS    | Apple Silicon| [sieve_VERSION_darwin_arm64.tar.gz](https://github.com/ersanisk/sieve/releases/latest) |
-| Windows  | amd64        | [sieve_VERSION_windows_amd64.zip](https://github.com/ersanisk/sieve/releases/latest) |
+| Linux    | amd64        | [sieve_VERSION_linux_amd64.tar.gz](https://github.com/ersisk/sieve/releases/latest) |
+| Linux    | arm64        | [sieve_VERSION_linux_arm64.tar.gz](https://github.com/ersisk/sieve/releases/latest) |
+| macOS    | Intel        | [sieve_VERSION_darwin_amd64.tar.gz](https://github.com/ersisk/sieve/releases/latest) |
+| macOS    | Apple Silicon| [sieve_VERSION_darwin_arm64.tar.gz](https://github.com/ersisk/sieve/releases/latest) |
+| Windows  | amd64        | [sieve_VERSION_windows_amd64.zip](https://github.com/ersisk/sieve/releases/latest) |
 
 #### Manual Installation
 
 ```bash
 # Example for macOS Apple Silicon
-curl -LO https://github.com/ersanisk/sieve/releases/latest/download/sieve_VERSION_darwin_arm64.tar.gz
+curl -LO https://github.com/ersisk/sieve/releases/latest/download/sieve_VERSION_darwin_arm64.tar.gz
 tar -xzf sieve_VERSION_darwin_arm64.tar.gz
 sudo mv sieve /usr/local/bin/
 
@@ -418,7 +418,7 @@ sieve/
 
 ```bash
 # Clone the repo
-git clone https://github.com/ersanisk/sieve.git
+git clone https://github.com/ersisk/sieve.git
 cd sieve
 
 # Install dependencies
