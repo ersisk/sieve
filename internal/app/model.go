@@ -108,22 +108,26 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if m.filterBar.IsFocused() && msg.Type == tea.KeyEnter {
 			m.filterBar.Hide()
+			m.mode = "view"
 			return m, tea.Batch(tickCmd(), tea.Tick(time.Millisecond*100, func(t time.Time) tea.Msg {
 				return ui.FilterSubmitMsg{}
 			}))
 		}
 		if m.filterBar.IsFocused() && msg.Type == tea.KeyEsc {
 			m.filterBar.Hide()
+			m.mode = "view"
 			return m, tickCmd()
 		}
 		if m.searchBar.IsFocused() && msg.Type == tea.KeyEnter {
 			m.searchBar.Hide()
+			m.mode = "view"
 			return m, tea.Batch(tickCmd(), tea.Tick(time.Millisecond*100, func(t time.Time) tea.Msg {
 				return ui.SearchSubmitMsg{}
 			}))
 		}
 		if m.searchBar.IsFocused() && msg.Type == tea.KeyEsc {
 			m.searchBar.Hide()
+			m.mode = "view"
 			return m, tickCmd()
 		}
 		if m.searchBar.IsFocused() {
@@ -306,6 +310,22 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 			return m, tea.Batch(tickCmd(), func() tea.Msg { return ui.ScrollUpMsg{Amount: 1} })
 		case m.keyMap.ScrollDown.key.String():
 			return m, tea.Batch(tickCmd(), func() tea.Msg { return ui.ScrollDownMsg{Amount: 1} })
+		}
+		return m, tickCmd()
+	}
+
+	if m.dashboard.IsVisible() {
+		if msg.Type == tea.KeyEsc {
+			m.dashboard.Hide()
+			m.mode = "view"
+			return m, tickCmd()
+		}
+		// Dashboard içinde scroll yapılabilir
+		switch msg.String() {
+		case m.keyMap.ScrollUp.key.String():
+			return m, tickCmd()
+		case m.keyMap.ScrollDown.key.String():
+			return m, tickCmd()
 		}
 		return m, tickCmd()
 	}
