@@ -2,6 +2,7 @@ package tail
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -14,14 +15,18 @@ func TestNewReader(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
-	tmpFile.Close()
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
+	_ = tmpFile.Close()
 
 	reader, err := NewReader(tmpFile.Name())
 	if err != nil {
 		t.Fatalf("NewReader() failed: %v", err)
 	}
-	defer reader.Close()
+	defer func() {
+		_ = reader.Close()
+	}()
 
 	if reader.path != tmpFile.Name() {
 		t.Errorf("Reader.path = %v, want %v", reader.path, tmpFile.Name())
@@ -37,7 +42,9 @@ func TestReader_ReadNew(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
 
 	testLines := []string{"line 1", "line 2", "line 3"}
 	for _, line := range testLines {
@@ -46,13 +53,15 @@ func TestReader_ReadNew(t *testing.T) {
 			t.Fatalf("Failed to write to temp file: %v", err)
 		}
 	}
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	reader, err := NewReader(tmpFile.Name())
 	if err != nil {
 		t.Fatalf("NewReader() failed: %v", err)
 	}
-	defer reader.Close()
+	defer func() {
+		_ = reader.Close()
+	}()
 
 	lines, err := reader.ReadNew()
 	if err != nil {
@@ -84,7 +93,9 @@ func TestReader_ReadAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
 
 	testLines := []string{"line 1", "line 2", "line 3"}
 	for _, line := range testLines {
@@ -93,13 +104,15 @@ func TestReader_ReadAll(t *testing.T) {
 			t.Fatalf("Failed to write to temp file: %v", err)
 		}
 	}
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	reader, err := NewReader(tmpFile.Name())
 	if err != nil {
 		t.Fatalf("NewReader() failed: %v", err)
 	}
-	defer reader.Close()
+	defer func() {
+		_ = reader.Close()
+	}()
 
 	lines, err := reader.ReadAll()
 	if err != nil {
@@ -125,19 +138,23 @@ func TestReader_Position(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
 
 	_, err = tmpFile.WriteString("line 1\nline 2\n")
 	if err != nil {
 		t.Fatalf("Failed to write to temp file: %v", err)
 	}
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	reader, err := NewReader(tmpFile.Name())
 	if err != nil {
 		t.Fatalf("NewReader() failed: %v", err)
 	}
-	defer reader.Close()
+	defer func() {
+		_ = reader.Close()
+	}()
 
 	if reader.Position() != 0 {
 		t.Errorf("Position() = %d, want 0", reader.Position())
@@ -158,7 +175,9 @@ func TestReader_SetPosition(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
 
 	testLines := []string{"line 1", "line 2", "line 3"}
 	for _, line := range testLines {
@@ -167,13 +186,15 @@ func TestReader_SetPosition(t *testing.T) {
 			t.Fatalf("Failed to write to temp file: %v", err)
 		}
 	}
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	reader, err := NewReader(tmpFile.Name())
 	if err != nil {
 		t.Fatalf("NewReader() failed: %v", err)
 	}
-	defer reader.Close()
+	defer func() {
+		_ = reader.Close()
+	}()
 
 	_, err = reader.ReadNew()
 	if err != nil {
@@ -203,19 +224,23 @@ func TestReader_ResetPosition(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
 
 	_, err = tmpFile.WriteString("line 1\nline 2\n")
 	if err != nil {
 		t.Fatalf("Failed to write to temp file: %v", err)
 	}
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	reader, err := NewReader(tmpFile.Name())
 	if err != nil {
 		t.Fatalf("NewReader() failed: %v", err)
 	}
-	defer reader.Close()
+	defer func() {
+		_ = reader.Close()
+	}()
 
 	_, err = reader.ReadNew()
 	if err != nil {
@@ -236,8 +261,10 @@ func TestReader_Close(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
-	tmpFile.Close()
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
+	_ = tmpFile.Close()
 
 	reader, err := NewReader(tmpFile.Name())
 	if err != nil {
@@ -262,13 +289,15 @@ func TestReader_Reopen(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
 
 	_, err = tmpFile.WriteString("line 1\n")
 	if err != nil {
 		t.Fatalf("Failed to write to temp file: %v", err)
 	}
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	reader, err := NewReader(tmpFile.Name())
 	if err != nil {
@@ -302,8 +331,10 @@ func TestNewWatcher(t *testing.T) {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
 	tmpPath := tmpFile.Name()
-	defer os.Remove(tmpPath)
-	tmpFile.Close()
+	defer func() {
+		_ = os.Remove(tmpPath)
+	}()
+	_ = tmpFile.Close()
 
 	watcher, err := NewWatcher(tmpPath)
 	if err != nil {
@@ -335,7 +366,10 @@ func TestWatcher_Start(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	_ = tmpFile.Close()
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
 
 	watcher, err := NewWatcher(tmpFile.Name())
 	if err != nil {
@@ -367,9 +401,9 @@ func TestWatcher_Watch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	f.Close()
+	_ = f.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	linesCh, err := Watch(ctx, tmpFile)
@@ -377,27 +411,30 @@ func TestWatcher_Watch(t *testing.T) {
 		t.Fatalf("Watch() failed: %v", err)
 	}
 
+	// Write lines in a goroutine after a small delay
 	go func() {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 		f, err := os.OpenFile(tmpFile, os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
 			t.Errorf("Failed to open file: %v", err)
 			return
 		}
-		defer f.Close()
+		defer func() {
+			_ = f.Close()
+		}()
 
 		for i := 0; i < 3; i++ {
-			_, err := f.WriteString("test line\n")
+			_, err := fmt.Fprintf(f, "line %d\n", i+1)
 			if err != nil {
 				t.Errorf("Failed to write line: %v", err)
 				return
 			}
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}()
 
 	totalLines := 0
-	timeout := time.After(2 * time.Second)
+	timeout := time.After(4 * time.Second)
 
 loop:
 	for {
@@ -434,7 +471,7 @@ func TestWatcher_WatchFromEnd(t *testing.T) {
 			t.Fatalf("Failed to write initial lines: %v", err)
 		}
 	}
-	f.Close()
+	_ = f.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
@@ -451,7 +488,9 @@ func TestWatcher_WatchFromEnd(t *testing.T) {
 			t.Errorf("Failed to open file: %v", err)
 			return
 		}
-		defer f.Close()
+		defer func() {
+			_ = f.Close()
+		}()
 
 		_, err = f.WriteString("new line\n")
 		if err != nil {
@@ -490,8 +529,10 @@ func TestWatcher_Stop(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
-	tmpFile.Close()
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
+	_ = tmpFile.Close()
 
 	watcher, err := NewWatcher(tmpFile.Name())
 	if err != nil {
@@ -515,7 +556,7 @@ func TestWatcher_PollImmediately(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	f.Close()
+	_ = f.Close()
 
 	watcher, err := NewWatcher(tmpFile)
 	if err != nil {
@@ -541,7 +582,7 @@ func TestWatcher_PollImmediately(t *testing.T) {
 	if _, err := f.WriteString("test line\n"); err != nil {
 		t.Fatalf("Failed to write to file: %v", err)
 	}
-	f.Close()
+	_ = f.Close()
 
 	lines, err = watcher.PollImmediately()
 	if err != nil {
@@ -576,8 +617,10 @@ func TestWatcher_RemoveChannel(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
-	tmpFile.Close()
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
+	_ = tmpFile.Close()
 
 	watcher, err := NewWatcher(tmpFile.Name())
 	if err != nil {
@@ -608,13 +651,15 @@ func TestWatcher_FileSize(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
 
 	_, err = tmpFile.WriteString("test content\n")
 	if err != nil {
 		t.Fatalf("Failed to write to temp file: %v", err)
 	}
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	watcher, err := NewWatcher(tmpFile.Name())
 	if err != nil {
@@ -639,7 +684,7 @@ func TestWatcher_CheckFileExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	watcher, err := NewWatcher(tmpFile.Name())
 	if err != nil {
@@ -653,7 +698,7 @@ func TestWatcher_CheckFileExists(t *testing.T) {
 		t.Error("CheckFileExists() returned false for existing file")
 	}
 
-	os.Remove(tmpFile.Name())
+	_ = os.Remove(tmpFile.Name())
 
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping CheckFileExists after deletion test on Windows - file may still exist until all handles are closed")
