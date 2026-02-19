@@ -40,6 +40,13 @@ func tickCmd() tea.Cmd {
 	})
 }
 
+// clearInfoCmd returns a command that clears info/error messages after a delay.
+func clearInfoCmd(delay time.Duration) tea.Cmd {
+	return tea.Tick(delay, func(t time.Time) tea.Msg {
+		return ui.ClearInfoMsg{}
+	})
+}
+
 // NewLinesMsg is sent when new lines are appended to the followed file.
 type NewLinesMsg struct {
 	Entries []logentry.Entry

@@ -168,3 +168,6 @@ type ErrorMsg struct {
 type LoadFileMsg struct {
 	Path string
 }
+
+// ClearInfoMsg is sent to clear info/error messages from status bar.
+type ClearInfoMsg struct{}

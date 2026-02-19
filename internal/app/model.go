@@ -261,6 +261,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.updateSelectedEntry()
 		}
 		return m, tickCmd()
+	case ui.ClearInfoMsg:
+		m.statusBar.SetInfo("")
+		return m, tickCmd()
 	}
 
 	return m, cmd
@@ -349,7 +352,7 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		m.logView.SetEntries(m.filtered)
 		m.statusBar.SetTotalLines(len(m.filtered))
 		m.statusBar.SetInfo("Filter cleared")
-		return m, tickCmd()
+		return m, tea.Batch(tickCmd(), clearInfoCmd(2*time.Second))
 	}
 
 	switch msg.String() {
@@ -457,7 +460,7 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		return m, tea.Batch(tickCmd(), loadFileCmd(m.filePath), tickCmd())
 	case m.keyMap.ToggleSort.key.String():
 		m.toggleSort()
-		return m, tickCmd()
+		return m, tea.Batch(tickCmd(), clearInfoCmd(2*time.Second))
 	case m.keyMap.Expand.key.String():
 		m.logDetail.Show(m.selectedEntry)
 		return m, tickCmd()
@@ -549,7 +552,7 @@ func (m Model) applyLevelFilter() (Model, tea.Cmd) {
 		m.logView.SetEntries(m.filtered)
 		m.statusBar.SetTotalLines(len(m.filtered))
 		m.statusBar.SetInfo(fmt.Sprintf("Level filter cleared — %d entries", len(m.filtered)))
-		return m, tickCmd()
+		return m, tea.Batch(tickCmd(), clearInfoCmd(2*time.Second))
 	}
 
 	var filtered []logentry.Entry
