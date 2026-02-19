@@ -65,7 +65,7 @@ type FieldAccess struct {
 }
 
 func (f FieldAccess) Eval(evalFunc Evaluator) (bool, error) {
-	val, err := evalFunc(FieldValue{Field: f.Field})
+	val, err := evalFunc(FieldValue{Field: f.Field}) //nolint:gosimple
 	if err != nil {
 		return false, err
 	}
@@ -149,7 +149,7 @@ func (b BinaryOp) evalComparison(evalFunc Evaluator) (bool, error) {
 func (b BinaryOp) resolveValue(expr Expr, evalFunc Evaluator) (any, error) {
 	switch e := expr.(type) {
 	case FieldAccess:
-		return evalFunc(FieldValue{Field: e.Field})
+		return evalFunc(FieldValue{Field: e.Field}) //nolint:gosimple
 	case Literal:
 		return e.Value, nil
 	default:

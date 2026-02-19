@@ -340,7 +340,9 @@ func TestWatcher_Start(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewWatcher() failed: %v", err)
 	}
-	defer watcher.Stop()
+	defer func() {
+		_ = watcher.Stop()
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
@@ -580,7 +582,9 @@ func TestWatcher_RemoveChannel(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewWatcher() failed: %v", err)
 	}
-	defer watcher.Stop()
+	defer func() {
+		_ = watcher.Stop()
+	}()
 
 	ctx1, cancel1 := context.WithCancel(context.Background())
 	defer cancel1()
@@ -615,7 +619,9 @@ func TestWatcher_FileSize(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewWatcher() failed: %v", err)
 	}
-	defer watcher.Stop()
+	defer func() {
+		_ = watcher.Stop()
+	}()
 
 	size, err := watcher.FileSize()
 	if err != nil {
