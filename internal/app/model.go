@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"os"
+	"sort"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -14,6 +15,13 @@ import (
 	"github.com/ersanisk/sieve/internal/theme"
 	"github.com/ersanisk/sieve/internal/ui"
 	"github.com/ersanisk/sieve/pkg/logentry"
+)
+
+type SortOrder int
+
+const (
+	SortAsc SortOrder = iota
+	SortDesc
 )
 
 type Model struct {
@@ -46,6 +54,8 @@ type Model struct {
 	// follow state
 	followSize   int64
 	followParser *parser.Parser
+	// sort state
+	sortOrder SortOrder
 }
 
 func NewModel(filePath string, themeName string, followMode bool) Model {
@@ -71,6 +81,7 @@ func NewModel(filePath string, themeName string, followMode bool) Model {
 		followMode:   followMode,
 		levelFilter:  logentry.Unknown,
 		followParser: parser.NewParser(),
+		sortOrder:    SortAsc,
 	}
 	m.statusBar.SetFollowing(followMode)
 	return m
@@ -410,8 +421,11 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 	case m.keyMap.LevelNone.key.String():
 		m.levelFilter = logentry.Unknown
 		return m.applyLevelFilter()
-	case m.keyMap.Refresh.key.String():
+	case m.keyMap.RefreshFile.key.String():
 		return m, tea.Batch(tickCmd(), loadFileCmd(m.filePath), tickCmd())
+	case m.keyMap.ToggleSort.key.String():
+		m.toggleSort()
+		return m, tickCmd()
 	case m.keyMap.Expand.key.String():
 		m.logDetail.Show(m.selectedEntry)
 		return m, tickCmd()
@@ -629,4 +643,28 @@ func (m Model) searchPrev() (Model, tea.Cmd) {
 	m.jumpToSearchResult(m.searchIndex)
 	m.statusBar.SetInfo(fmt.Sprintf("Match %d/%d for %q", m.searchIndex+1, len(m.searchResults), m.searchQuery))
 	return m, tickCmd()
+}
+
+func (m *Model) toggleSort() {
+	if m.sortOrder == SortAsc {
+		m.sortOrder = SortDesc
+	} else {
+		m.sortOrder = SortAsc
+	}
+	m.applySort()
+}
+
+func (m *Model) applySort() {
+	sort.Slice(m.filtered, func(i, j int) bool {
+		if m.sortOrder == SortAsc {
+			return m.filtered[i].Timestamp.Before(m.filtered[j].Timestamp)
+		}
+		return m.filtered[i].Timestamp.After(m.filtered[j].Timestamp)
+	})
+	m.logView.SetEntries(m.filtered)
+	orderText := "ascending"
+	if m.sortOrder == SortDesc {
+		orderText = "descending"
+	}
+	m.statusBar.SetInfo(fmt.Sprintf("Sorted by timestamp: %s", orderText))
 }

@@ -220,7 +220,8 @@ func (m Help) renderContent() string {
 
 	builder.WriteString("\n")
 	builder.WriteString(m.renderSection("File & Program", []keyBinding{
-		{"r", "Refresh file"},
+		{"r", "Toggle sort order"},
+		{"R", "Refresh file"},
 		{"F", "Toggle follow mode"},
 		{"Ctrl+C", "Force quit"},
 		{"q", "Quit"},

@@ -35,7 +35,8 @@ type KeyMap struct {
 	Expand          keyBinding
 	Collapse        keyBinding
 	Copy            keyBinding
-	Refresh         keyBinding
+	RefreshFile     keyBinding
+	ToggleSort      keyBinding
 }
 
 // keyBinding represents a single keyboard binding.
@@ -78,13 +79,14 @@ func DefaultKeyMap() KeyMap {
 		Expand:          keyBinding{key: tea.Key{Type: tea.KeyEnter}, help: "Expand Entry (Enter)", style: keyStyle},
 		Collapse:        keyBinding{key: tea.Key{Type: tea.KeyEsc}, help: "Collapse/Close (Esc)", style: keyStyle},
 		Copy:            keyBinding{key: tea.Key{Type: tea.KeyRunes, Runes: []rune{'c'}}, help: "Copy Entry", style: keyStyle},
-		Refresh:         keyBinding{key: tea.Key{Type: tea.KeyRunes, Runes: []rune{'r'}}, help: "Refresh", style: keyStyle},
+		RefreshFile:     keyBinding{key: tea.Key{Type: tea.KeyRunes, Runes: []rune{'R'}}, help: "Refresh File (Shift+R)", style: keyStyle},
+		ToggleSort:      keyBinding{key: tea.Key{Type: tea.KeyRunes, Runes: []rune{'r'}}, help: "Toggle Sort", style: keyStyle},
 	}
 }
 
 // ShortHelp returns a short help string for keybindings.
 func (k KeyMap) ShortHelp() string {
-	return "q: quit | ?: help | /: search | f: filter | d: dashboard"
+	return "q: quit | ?: help | /: search | f: filter | d: dashboard | r: sort | R: refresh"
 }
 
 // FullHelp returns a full help string for keybindings.
@@ -114,7 +116,8 @@ View & Actions:
   Esc          Close overlay / exit mode
 
 File & Program:
-  r            Refresh
+  r            Toggle Sort (asc/desc)
+  R            Refresh file
   q            Quit
   ?            Toggle this help`
 }
