@@ -124,15 +124,34 @@ func (m *LogDetail) updateContent() {
 func (m LogDetail) renderContent(width, height int) string {
 	var builder strings.Builder
 
+	// Header
 	builder.WriteString(m.renderHeader(width))
+	builder.WriteString("\n")
+	builder.WriteString(m.renderSeparator(width, "═"))
 	builder.WriteString("\n\n")
+
+	// Main info section
 	builder.WriteString(m.renderLevel(width))
+	builder.WriteString("\n")
 	builder.WriteString(m.renderTimestamp(width))
+	builder.WriteString("\n")
 	builder.WriteString(m.renderMessage(width))
-	builder.WriteString("\n")
-	builder.WriteString(m.renderFields(width, height))
-	builder.WriteString("\n")
-	builder.WriteString(m.renderRawJSON(width))
+	builder.WriteString("\n\n")
+
+	// Fields section
+	if len(m.entry.Fields) > 0 {
+		builder.WriteString(m.renderSeparator(width, "─"))
+		builder.WriteString("\n")
+		builder.WriteString(m.renderFields(width, height))
+		builder.WriteString("\n")
+	}
+
+	// Raw JSON section
+	if m.entry.Raw != "" {
+		builder.WriteString(m.renderSeparator(width, "─"))
+		builder.WriteString("\n")
+		builder.WriteString(m.renderRawJSON(width))
+	}
 
 	return builder.String()
 }
@@ -143,7 +162,13 @@ func (m LogDetail) renderHeader(width int) string {
 		Foreground(m.theme.Colors().Highlight).
 		Width(width)
 
-	return headerStyle.Render("Log Entry Details")
+	return headerStyle.Render("📋 Log Entry Details")
+}
+
+func (m LogDetail) renderSeparator(width int, char string) string {
+	separatorStyle := lipgloss.NewStyle().
+		Foreground(m.theme.Colors().Border)
+	return separatorStyle.Render(strings.Repeat(char, width))
 }
 
 func (m LogDetail) renderLevel(width int) string {
@@ -163,28 +188,47 @@ func (m LogDetail) renderLevel(width int) string {
 		color = m.theme.Colors().Foreground
 	}
 
+	labelStyle := lipgloss.NewStyle().
+		Foreground(m.theme.Colors().Key).
+		Bold(true).
+		Width(12)
+
 	levelStyle := lipgloss.NewStyle().
 		Background(color).
 		Foreground(m.theme.Colors().Background).
 		Bold(true).
-		Padding(0, 1)
+		Padding(0, 2)
 
-	return fmt.Sprintf("Level: %s", levelStyle.Render(m.entry.Level.String()))
+	return labelStyle.Render("LEVEL") + levelStyle.Render(m.entry.Level.String())
 }
 
 func (m LogDetail) renderTimestamp(width int) string {
 	if m.entry.Timestamp.IsZero() {
 		return ""
 	}
+
+	labelStyle := lipgloss.NewStyle().
+		Foreground(m.theme.Colors().Key).
+		Bold(true).
+		Width(12)
+
 	timestampStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Colors().Timestamp)
-	return fmt.Sprintf("Time:  %s", timestampStyle.Render(m.entry.Timestamp.Format("2006-01-02 15:04:05.000")))
+
+	return labelStyle.Render("TIME") + timestampStyle.Render(m.entry.Timestamp.Format("2006-01-02 15:04:05.000"))
 }
 
 func (m LogDetail) renderMessage(width int) string {
+	labelStyle := lipgloss.NewStyle().
+		Foreground(m.theme.Colors().Key).
+		Bold(true).
+		Width(12)
+
 	messageStyle := lipgloss.NewStyle().
-		Foreground(m.theme.Colors().Foreground)
-	return fmt.Sprintf("Msg:   %s", messageStyle.Render(m.entry.Message))
+		Foreground(m.theme.Colors().Foreground).
+		Width(width - 12)
+
+	return labelStyle.Render("MESSAGE") + messageStyle.Render(m.entry.Message)
 }
 
 func (m LogDetail) renderFields(width, height int) string {
@@ -195,14 +239,13 @@ func (m LogDetail) renderFields(width, height int) string {
 	var builder strings.Builder
 	headerStyle := lipgloss.NewStyle().
 		Bold(true).
-		Underline(true).
-		Foreground(m.theme.Colors().Key)
-	builder.WriteString(headerStyle.Render("Fields:"))
-	builder.WriteString("\n")
+		Foreground(m.theme.Colors().Highlight)
+	builder.WriteString(headerStyle.Render("FIELDS"))
+	builder.WriteString("\n\n")
 
 	keyStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Colors().Key).
-		Width(15)
+		Width(18)
 	valueStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Colors().Value)
 
@@ -216,7 +259,9 @@ func (m LogDetail) renderFields(width, height int) string {
 	for _, key := range keys {
 		value := m.entry.Fields[key]
 		valueStr := m.formatValue(value)
-		builder.WriteString(keyStyle.Render(key + ": "))
+		builder.WriteString("  ")
+		builder.WriteString(keyStyle.Render(key + ":"))
+		builder.WriteString(" ")
 		builder.WriteString(valueStyle.Render(valueStr))
 		builder.WriteString("\n")
 	}
@@ -232,21 +277,17 @@ func (m LogDetail) renderRawJSON(width int) string {
 	var builder strings.Builder
 	headerStyle := lipgloss.NewStyle().
 		Bold(true).
-		Underline(true).
-		Foreground(m.theme.Colors().Key)
+		Foreground(m.theme.Colors().Highlight)
 
-	builder.WriteString("\n")
-	builder.WriteString(headerStyle.Render("Raw JSON:"))
-	builder.WriteString("\n")
-
-	// Raw JSON satır uzunluğunu viewport genişliğine göre kır (wrap)
-	raw := m.entry.Raw
+	builder.WriteString(headerStyle.Render("RAW JSON"))
+	builder.WriteString("\n\n")
 
 	rawStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Colors().Value).
-		Width(width - 2) // Padding için
+		Width(width - 4) // Padding için
 
-	builder.WriteString(rawStyle.Render(raw))
+	builder.WriteString("  ")
+	builder.WriteString(rawStyle.Render(m.entry.Raw))
 
 	return builder.String()
 }
