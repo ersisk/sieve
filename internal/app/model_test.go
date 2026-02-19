@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/ersanisk/sieve/pkg/logentry"
 )
 
@@ -64,5 +65,61 @@ func TestSortLogic(t *testing.T) {
 	}
 	if entries[2].Message != "first" {
 		t.Errorf("Expected third message 'first' when sorted descending, got '%s'", entries[2].Message)
+	}
+}
+
+func TestFilterBarESCKey(t *testing.T) {
+	model := NewModel("", "kanagawa", false)
+
+	// Filter bar'ı aç
+	model.filterBar.Show()
+
+	if !model.filterBar.IsFocused() {
+		t.Error("FilterBar should be focused after Show()")
+	}
+
+	if !model.filterBar.IsVisible() {
+		t.Error("FilterBar should be visible after Show()")
+	}
+
+	// ESC tuşu gönder
+	escMsg := tea.KeyMsg{Type: tea.KeyEsc}
+	newModel, _ := model.Update(escMsg)
+	model = newModel.(Model)
+
+	if model.filterBar.IsFocused() {
+		t.Error("FilterBar should not be focused after ESC")
+	}
+
+	if model.filterBar.IsVisible() {
+		t.Error("FilterBar should not be visible after ESC")
+	}
+
+	if model.mode != "view" {
+		t.Errorf("Mode should be 'view' after ESC, got '%s'", model.mode)
+	}
+}
+
+func TestSearchBarESCKey(t *testing.T) {
+	model := NewModel("", "kanagawa", false)
+
+	// Search bar'ı aç
+	model.searchBar.Show()
+
+	if !model.searchBar.IsFocused() {
+		t.Error("SearchBar should be focused after Show()")
+	}
+
+	// ESC tuşu gönder
+	escMsg := tea.KeyMsg{Type: tea.KeyEsc}
+	newModel, _ := model.Update(escMsg)
+	model = newModel.(Model)
+
+	if model.searchBar.IsFocused() {
+		t.Error("SearchBar should not be focused after ESC")
+	}
+
+	if model.mode != "view" {
+		t.Errorf("Mode should be 'view' after ESC, got '%s'", model.mode)
 	}
 }

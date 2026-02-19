@@ -113,7 +113,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return ui.FilterSubmitMsg{}
 			}))
 		}
-		if m.filterBar.IsFocused() && msg.Type == tea.KeyEsc {
+		if (m.filterBar.IsFocused() || m.filterBar.IsVisible()) && msg.Type == tea.KeyEsc {
 			m.filterBar.Hide()
 			m.mode = "view"
 			return m, tickCmd()
@@ -125,7 +125,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return ui.SearchSubmitMsg{}
 			}))
 		}
-		if m.searchBar.IsFocused() && msg.Type == tea.KeyEsc {
+		if (m.searchBar.IsFocused() || m.searchBar.IsVisible()) && msg.Type == tea.KeyEsc {
 			m.searchBar.Hide()
 			m.mode = "view"
 			return m, tickCmd()
