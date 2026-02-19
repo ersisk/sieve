@@ -21,7 +21,7 @@ func TestModelFilePickerKeyHandling(t *testing.T) {
 	showPickerMsg := ui.ShowFilePickerMsg{Directory: "."}
 
 	// Process ShowFilePickerMsg
-	updatedModel, cmd := model.Update(showPickerMsg)
+	updatedModel, _ := model.Update(showPickerMsg)
 	model = updatedModel.(Model)
 
 	if !model.filePicker.IsVisible() {
@@ -47,15 +47,15 @@ func TestModelFilePickerKeyHandling(t *testing.T) {
 
 	// Test enter key - should select file
 	keyMsg = tea.KeyMsg{Type: tea.KeyEnter}
-	updatedModel, cmd = model.Update(keyMsg)
+	updatedModel, enterCmd := model.Update(keyMsg)
 	model = updatedModel.(Model)
 
-	if cmd == nil {
+	if enterCmd == nil {
 		t.Fatal("Expected command after enter key")
 	}
 
 	// Execute the command
-	cmdMsg := cmd()
+	cmdMsg := enterCmd()
 	fileSelectedMsg, ok := cmdMsg.(ui.FileSelectedMsg)
 	if !ok {
 		t.Fatalf("Expected FileSelectedMsg after enter, got %T", cmdMsg)

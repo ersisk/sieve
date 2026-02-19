@@ -99,10 +99,14 @@ func getTheme(name string) theme.Theme {
 func (m Model) Init() tea.Cmd {
 	if m.filePath == "" {
 		// No file specified - show file picker with current directory
+		cwd, err := os.Getwd()
+		if err != nil {
+			cwd = "."
+		}
 		return tea.Batch(
 			tickCmd(),
 			func() tea.Msg {
-				return ui.ShowFilePickerMsg{Directory: "."}
+				return ui.ShowFilePickerMsg{Directory: cwd}
 			},
 		)
 	}

@@ -99,9 +99,15 @@ func findLogFilesCmd(dir string) tea.Cmd {
 			dir = "."
 		}
 
+		// Convert to absolute path for consistency
+		absDir, err := filepath.Abs(dir)
+		if err != nil {
+			absDir = dir
+		}
+
 		var logFiles []string
 
-		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		err = filepath.Walk(absDir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return nil // Skip errors and continue
 			}
