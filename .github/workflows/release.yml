@@ -56,7 +56,7 @@ jobs:
       - name: Checkout homebrew-tap
         uses: actions/checkout@v4
         with:
-          repository: ersanisk/homebrew-tap
+          repository: ersisk/homebrew-tap
           token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
           path: homebrew-tap
 
@@ -69,7 +69,7 @@ jobs:
 
       - name: Download release checksums
         run: |
-          curl -sL "https://github.com/ersanisk/sieve/releases/download/v${{ steps.release.outputs.version }}/checksums.txt" -o checksums.txt
+          curl -sL "https://github.com/ersisk/sieve/releases/download/v${{ steps.release.outputs.version }}/checksums.txt" -o checksums.txt
           cat checksums.txt
 
       - name: Extract SHA256 checksums
@@ -89,28 +89,28 @@ jobs:
           cat > homebrew-tap/Formula/sieve.rb << 'EOF'
           class Sieve < Formula
             desc "Blazing-fast, multi-platform JSON log viewer for your terminal"
-            homepage "https://github.com/ersanisk/sieve"
+            homepage "https://github.com/ersisk/sieve"
             version "${{ steps.release.outputs.version }}"
             license "Apache-2.0"
 
             on_macos do
               on_intel do
-                url "https://github.com/ersanisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_darwin_amd64.tar.gz"
+                url "https://github.com/ersisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_darwin_amd64.tar.gz"
                 sha256 "${{ steps.sha.outputs.darwin_amd64 }}"
               end
               on_arm do
-                url "https://github.com/ersanisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_darwin_arm64.tar.gz"
+                url "https://github.com/ersisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_darwin_arm64.tar.gz"
                 sha256 "${{ steps.sha.outputs.darwin_arm64 }}"
               end
             end
 
             on_linux do
               on_intel do
-                url "https://github.com/ersanisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_linux_amd64.tar.gz"
+                url "https://github.com/ersisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_linux_amd64.tar.gz"
                 sha256 "${{ steps.sha.outputs.linux_amd64 }}"
               end
               on_arm do
-                url "https://github.com/ersanisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_linux_arm64.tar.gz"
+                url "https://github.com/ersisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_linux_arm64.tar.gz"
                 sha256 "${{ steps.sha.outputs.linux_arm64 }}"
               end
             end

@@ -80,7 +80,7 @@ changelog:
 
 release:
   github:
-    owner: ersanisk
+    owner: ersisk
     name: sieve
   draft: false
   prerelease: auto
@@ -92,19 +92,19 @@ release:
   footer: |
     ---
 
-    **Full Changelog**: https://github.com/ersanisk/sieve/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/ersisk/sieve/compare/{{ .PreviousTag }}...{{ .Tag }}
 
     ### Installation
 
     #### Homebrew (macOS / Linux)
     ```bash
-    brew tap ersanisk/tap
+    brew tap ersisk/tap
     brew install sieve
     ```
 
     #### Go Install
     ```bash
-    go install github.com/ersanisk/sieve@{{ .Tag }}
+    go install github.com/ersisk/sieve@{{ .Tag }}
     ```
 
     #### Download Binary
@@ -113,11 +113,11 @@ release:
 brews:
   - name: sieve
     repository:
-      owner: ersanisk
+      owner: ersisk
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     directory: Formula
-    homepage: "https://github.com/ersanisk/sieve"
+    homepage: "https://github.com/ersisk/sieve"
     description: "Blazing-fast, multi-platform JSON log viewer for your terminal"
     license: "Apache-2.0"
     commit_author:
@@ -132,9 +132,9 @@ brews:
 nfpms:
   - id: packages
     package_name: sieve
-    vendor: ersanisk
-    homepage: "https://github.com/ersanisk/sieve"
-    maintainer: "ersanisk <ersanisk@users.noreply.github.com>"
+    vendor: ersisk
+    homepage: "https://github.com/ersisk/sieve"
+    maintainer: "ersisk <ersisk@users.noreply.github.com>"
     description: "Blazing-fast, multi-platform JSON log viewer for your terminal"
     license: Apache-2.0
     formats:
@@ -153,12 +153,12 @@ nfpms:
 scoops:
   - name: sieve
     repository:
-      owner: ersanisk
+      owner: ersisk
       name: scoop-bucket
       token: "{{ .Env.SCOOP_BUCKET_GITHUB_TOKEN }}"
-    homepage: "https://github.com/ersanisk/sieve"
+    homepage: "https://github.com/ersisk/sieve"
     description: "Blazing-fast, multi-platform JSON log viewer for your terminal"
-    license: Apache-2.0
+    license: "Apache-2.0"
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
