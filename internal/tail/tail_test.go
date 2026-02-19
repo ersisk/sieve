@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -653,6 +654,10 @@ func TestWatcher_CheckFileExists(t *testing.T) {
 	}
 
 	os.Remove(tmpFile.Name())
+
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping CheckFileExists after deletion test on Windows - file may still exist until all handles are closed")
+	}
 
 	if watcher.CheckFileExists() {
 		t.Error("CheckFileExists() returned true for deleted file")
