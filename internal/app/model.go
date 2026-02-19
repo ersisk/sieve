@@ -293,7 +293,11 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 	if m.logDetail.IsVisible() {
 		if msg.Type == tea.KeyEsc {
 			m.logDetail.Hide()
+			return m, tickCmd()
 		}
+
+		// Log detail modal açıkken tuşları ona yönlendir (scroll için)
+		m.logDetail.Update(msg)
 		return m, tickCmd()
 	}
 

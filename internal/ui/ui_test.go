@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/charmbracelet/lipgloss"
@@ -370,4 +371,57 @@ func (m *MockTheme) ErrorStyle() lipgloss.Style {
 
 func (m *MockTheme) InfoStyle() lipgloss.Style {
 	return lipgloss.NewStyle()
+}
+
+func TestLogDetail_Show(t *testing.T) {
+	theme := &MockTheme{}
+	detail := NewLogDetail(theme)
+	detail.SetSize(100, 30)
+
+	entry := logentry.Entry{
+		Level:   logentry.Info,
+		Message: "Test Message",
+		Fields: map[string]any{
+			"b_field": "value2",
+			"a_field": "value1",
+		},
+		Raw: `{"level":"info","msg":"Test Message","a_field":"value1","b_field":"value2"}`,
+	}
+
+	detail.Show(entry)
+
+	if !detail.IsVisible() {
+		t.Error("Show() visible = false, want true")
+	}
+
+	// Verify content through viewport
+	content := detail.viewport.View()
+
+	// Check for Raw JSON header
+	if !contains(content, "Raw JSON:") {
+		t.Error("View() missing 'Raw JSON:' header")
+	}
+
+	// Check for Raw JSON content
+	if !contains(content, entry.Raw) {
+		t.Error("View() missing raw JSON content")
+	}
+
+	// Check sorting: a_field should appear before b_field
+	idxA := indexOf(content, "a_field")
+	idxB := indexOf(content, "b_field")
+
+	if idxA == -1 || idxB == -1 {
+		t.Error("View() missing fields")
+	} else if idxA > idxB {
+		t.Errorf("Fields not sorted: a_field index %d > b_field index %d", idxA, idxB)
+	}
+}
+
+func contains(s, substr string) bool {
+	return strings.Contains(s, substr)
+}
+
+func indexOf(s, substr string) int {
+	return strings.Index(s, substr)
 }

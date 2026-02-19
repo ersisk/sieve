@@ -2,8 +2,10 @@ package ui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/ersanisk/sieve/internal/theme"
@@ -12,11 +14,12 @@ import (
 
 // LogDetail displays detailed information about a log entry.
 type LogDetail struct {
-	visible bool
-	entry   logentry.Entry
-	theme   theme.Theme
-	width   int
-	height  int
+	visible  bool
+	entry    logentry.Entry
+	theme    theme.Theme
+	width    int
+	height   int
+	viewport viewport.Model
 }
 
 // NewLogDetail creates a new LogDetail modal.
@@ -31,6 +34,8 @@ func NewLogDetail(theme theme.Theme) *LogDetail {
 func (m *LogDetail) Show(entry logentry.Entry) {
 	m.entry = entry
 	m.visible = true
+	m.updateContent()
+	m.viewport.GotoTop()
 }
 
 // Hide hides the log detail modal.
@@ -47,6 +52,21 @@ func (m *LogDetail) IsVisible() bool {
 func (m *LogDetail) SetSize(width, height int) {
 	m.width = width
 	m.height = height
+
+	modalWidth := min(m.width-8, 100)
+	modalHeight := min(m.height-8, 50)
+
+	m.viewport.Width = modalWidth
+	m.viewport.Height = modalHeight
+	m.updateContent()
+}
+
+// Update handles events for the log detail modal.
+func (m *LogDetail) Update(msg any) {
+	// Ideally LogDetail should be a proper tea.Model, but for now we wrap it.
+	// We only care about scrolling keys.
+	newViewport, _ := m.viewport.Update(msg)
+	m.viewport = newViewport
 }
 
 // View renders the log detail modal.
@@ -59,21 +79,22 @@ func (m LogDetail) View() string {
 		return ""
 	}
 
-	modalWidth := min(m.width-4, 80)
-	modalHeight := min(m.height-4, 30)
-
-	if modalWidth < 20 {
-		return ""
+	// Ensure viewport size is correct if not set
+	if m.viewport.Width == 0 {
+		modalWidth := min(m.width-4, 80)
+		modalHeight := min(m.height-4, 30)
+		m.viewport.Width = modalWidth
+		m.viewport.Height = modalHeight
 	}
 
-	content := m.renderContent(modalWidth, modalHeight)
+	content := m.viewport.View()
 
 	modalStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(m.theme.Colors().Highlight).
 		Padding(1, 2).
-		Width(modalWidth).
-		Height(modalHeight).
+		Width(m.viewport.Width).
+		Height(m.viewport.Height).
 		Background(m.theme.Colors().Background).
 		Foreground(m.theme.Colors().Foreground)
 
@@ -92,6 +113,14 @@ func min(a, b int) int {
 	return b
 }
 
+func (m *LogDetail) updateContent() {
+	if m.viewport.Width == 0 {
+		return
+	}
+	content := m.renderContent(m.viewport.Width, m.viewport.Height)
+	m.viewport.SetContent(content)
+}
+
 func (m LogDetail) renderContent(width, height int) string {
 	var builder strings.Builder
 
@@ -102,6 +131,8 @@ func (m LogDetail) renderContent(width, height int) string {
 	builder.WriteString(m.renderMessage(width))
 	builder.WriteString("\n")
 	builder.WriteString(m.renderFields(width, height))
+	builder.WriteString("\n")
+	builder.WriteString(m.renderRawJSON(width))
 
 	return builder.String()
 }
@@ -175,12 +206,47 @@ func (m LogDetail) renderFields(width, height int) string {
 	valueStyle := lipgloss.NewStyle().
 		Foreground(m.theme.Colors().Value)
 
-	for key, value := range m.entry.Fields {
+	// Sort keys for stable ordering
+	keys := make([]string, 0, len(m.entry.Fields))
+	for k := range m.entry.Fields {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		value := m.entry.Fields[key]
 		valueStr := m.formatValue(value)
 		builder.WriteString(keyStyle.Render(key + ": "))
 		builder.WriteString(valueStyle.Render(valueStr))
 		builder.WriteString("\n")
 	}
+
+	return builder.String()
+}
+
+func (m LogDetail) renderRawJSON(width int) string {
+	if m.entry.Raw == "" {
+		return ""
+	}
+
+	var builder strings.Builder
+	headerStyle := lipgloss.NewStyle().
+		Bold(true).
+		Underline(true).
+		Foreground(m.theme.Colors().Key)
+
+	builder.WriteString("\n")
+	builder.WriteString(headerStyle.Render("Raw JSON:"))
+	builder.WriteString("\n")
+
+	// Raw JSON satır uzunluğunu viewport genişliğine göre kır (wrap)
+	raw := m.entry.Raw
+
+	rawStyle := lipgloss.NewStyle().
+		Foreground(m.theme.Colors().Value).
+		Width(width - 2) // Padding için
+
+	builder.WriteString(rawStyle.Render(raw))
 
 	return builder.String()
 }
