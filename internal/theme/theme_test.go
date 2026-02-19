@@ -15,6 +15,7 @@ func TestGetKnownTheme(t *testing.T) {
 		{"dracula", "dracula"},
 		{"gruvbox", "gruvbox"},
 		{"nord", "nord"},
+		{"kanagawa", "kanagawa"},
 	}
 
 	for _, tt := range tests {
@@ -29,8 +30,8 @@ func TestGetKnownTheme(t *testing.T) {
 
 func TestGetUnknownThemeFallback(t *testing.T) {
 	theme := Get("nonexistent")
-	if theme.Name() != "monokai" {
-		t.Errorf("Get(nonexistent).Name() = %q, want monokai", theme.Name())
+	if theme.Name() != "kanagawa" {
+		t.Errorf("Get(nonexistent).Name() = %q, want kanagawa", theme.Name())
 	}
 }
 
@@ -73,11 +74,11 @@ func TestThemeStyles(t *testing.T) {
 
 func TestNames(t *testing.T) {
 	names := Names()
-	if len(names) < 4 {
-		t.Errorf("Names() returned %d themes, want at least 4", len(names))
+	if len(names) < 5 {
+		t.Errorf("Names() returned %d themes, want at least 5", len(names))
 	}
 
-	expected := map[string]bool{"monokai": false, "dracula": false, "gruvbox": false, "nord": false}
+	expected := map[string]bool{"monokai": false, "dracula": false, "gruvbox": false, "nord": false, "kanagawa": false}
 	for _, name := range names {
 		if _, ok := expected[name]; ok {
 			expected[name] = true
