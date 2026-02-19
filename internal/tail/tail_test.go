@@ -644,7 +644,9 @@ func TestWatcher_CheckFileExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewWatcher() failed: %v", err)
 	}
-	defer watcher.Stop()
+	defer func() {
+		_ = watcher.Stop()
+	}()
 
 	if !watcher.CheckFileExists() {
 		t.Error("CheckFileExists() returned false for existing file")

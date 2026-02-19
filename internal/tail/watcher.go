@@ -205,7 +205,7 @@ func WatchFromEnd(ctx context.Context, path string) (<-chan []string, error) {
 	}
 
 	if err := watcher.GetReader().ResetPosition(); err != nil {
-		watcher.Stop()
+		_ = watcher.Stop()
 		return nil, err
 	}
 
