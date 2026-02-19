@@ -123,3 +123,35 @@ func TestSearchBarESCKey(t *testing.T) {
 		t.Errorf("Mode should be 'view' after ESC, got '%s'", model.mode)
 	}
 }
+func TestFilterClearWithESC(t *testing.T) {
+	model := NewModel("", "kanagawa", false)
+
+	// Önce bazı entries ekle
+	model.entries = []logentry.Entry{
+		{Level: logentry.Info, Message: "test1"},
+		{Level: logentry.Error, Message: "test2"},
+	}
+	model.filtered = model.entries
+
+	// Level filter uygula
+	model.levelFilter = logentry.Error
+	model, _ = model.applyLevelFilter()
+
+	if len(model.filtered) != 1 {
+		t.Errorf("Expected 1 filtered entry, got %d", len(model.filtered))
+	}
+
+	// ESC tuşu gönder
+	escMsg := tea.KeyMsg{Type: tea.KeyEsc}
+	newModel, _ := model.Update(escMsg)
+	model = newModel.(Model)
+
+	// Filter temizlenmeli
+	if model.levelFilter != logentry.Unknown {
+		t.Error("Level filter should be cleared after ESC")
+	}
+
+	if len(model.filtered) != 2 {
+		t.Errorf("Expected all entries after filter clear, got %d", len(model.filtered))
+	}
+}

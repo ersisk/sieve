@@ -340,6 +340,18 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		return m, tickCmd()
 	}
 
+	// Esc: filter modundan çık ve filtreyi temizle
+	if msg.Type == tea.KeyEsc && (m.filter != nil || m.levelFilter != logentry.Unknown) {
+		m.filter = nil
+		m.filterExpr = ""
+		m.levelFilter = logentry.Unknown
+		m.filtered = m.entries
+		m.logView.SetEntries(m.filtered)
+		m.statusBar.SetTotalLines(len(m.filtered))
+		m.statusBar.SetInfo("Filter cleared")
+		return m, tickCmd()
+	}
+
 	switch msg.String() {
 	case m.keyMap.Quit.key.String():
 		return m, tea.Quit
