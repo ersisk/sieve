@@ -77,14 +77,25 @@ jobs:
       - name: Extract SHA256 checksums
         id: sha
         run: |
-          DARWIN_AMD64=$(grep "sieve_.*_darwin_amd64.tar.gz" checksums.txt | awk '{print $1}')
-          DARWIN_ARM64=$(grep "sieve_.*_darwin_arm64.tar.gz" checksums.txt | awk '{print $1}')
-          LINUX_AMD64=$(grep "sieve_.*_linux_amd64.tar.gz" checksums.txt | awk '{print $1}')
-          LINUX_ARM64=$(grep "sieve_.*_linux_arm64.tar.gz" checksums.txt | awk '{print $1}')
-          echo "darwin_amd64=${DARWIN_AMD64}" >> "$GITHUB_OUTPUT"
-          echo "darwin_arm64=${DARWIN_ARM64}" >> "$GITHUB_OUTPUT"
-          echo "linux_amd64=${LINUX_AMD64}" >> "$GITHUB_OUTPUT"
-          echo "linux_arm64=${LINUX_ARM64}" >> "$GITHUB_OUTPUT"
+          # Extract checksums and trim any whitespace/special characters
+          DARWIN_AMD64=$(grep "darwin_amd64.tar.gz" checksums.txt | awk '{print $1}' | tr -d '[:space:]')
+          DARWIN_ARM64=$(grep "darwin_arm64.tar.gz" checksums.txt | awk '{print $1}' | tr -d '[:space:]')
+          LINUX_AMD64=$(grep "linux_amd64.tar.gz" checksums.txt | awk '{print $1}' | tr -d '[:space:]')
+          LINUX_ARM64=$(grep "linux_arm64.tar.gz" checksums.txt | awk '{print $1}' | tr -d '[:space:]')
+          
+          # Debug: Show extracted values
+          echo "DARWIN_AMD64: $DARWIN_AMD64"
+          echo "DARWIN_ARM64: $DARWIN_ARM64"
+          echo "LINUX_AMD64: $LINUX_AMD64"
+          echo "LINUX_ARM64: $LINUX_ARM64"
+          
+          # Write to GITHUB_OUTPUT using heredoc to avoid format issues
+          {
+            echo "darwin_amd64=$DARWIN_AMD64"
+            echo "darwin_arm64=$DARWIN_ARM64"
+            echo "linux_amd64=$LINUX_AMD64"
+            echo "linux_arm64=$LINUX_ARM64"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Update Homebrew formula
         env:
