@@ -14,13 +14,16 @@ import (
 
 // FilePicker is a file picker component.
 type FilePicker struct {
-	theme    theme.Theme
-	files    []string
-	selected int
-	visible  bool
-	width    int
-	height   int
-	offset   int
+	theme         theme.Theme
+	files         []string
+	filteredFiles []string
+	selected      int
+	visible       bool
+	width         int
+	height        int
+	offset        int
+	searchMode    bool
+	searchQuery   string
 }
 
 // FileSelectedMsg is sent when a file is selected.
@@ -31,21 +34,27 @@ type FileSelectedMsg struct {
 // NewFilePicker creates a new file picker.
 func NewFilePicker(theme theme.Theme) FilePicker {
 	return FilePicker{
-		theme:    theme,
-		files:    []string{},
-		selected: 0,
-		visible:  false,
-		width:    80,
-		height:   24,
-		offset:   0,
+		theme:         theme,
+		files:         []string{},
+		filteredFiles: []string{},
+		selected:      0,
+		visible:       false,
+		width:         80,
+		height:        24,
+		offset:        0,
+		searchMode:    false,
+		searchQuery:   "",
 	}
 }
 
 // SetFiles sets the list of files to display.
 func (f *FilePicker) SetFiles(files []string) {
 	f.files = files
+	f.filteredFiles = files
 	f.selected = 0
 	f.offset = 0
+	f.searchQuery = ""
+	f.searchMode = false
 }
 
 // Show shows the file picker.
@@ -77,29 +86,88 @@ func (f *FilePicker) Update(msg tea.Msg) (*FilePicker, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "up", "k":
-			f.selectPrev()
-		case "down", "j":
-			f.selectNext()
-		case "g":
-			f.selectFirst()
-		case "G":
-			f.selectLast()
-		case "enter":
-			if len(f.files) > 0 {
-				return f, func() tea.Msg {
-					return FileSelectedMsg{Path: f.files[f.selected]}
-				}
-			}
-		case "q", "esc", "ctrl+c":
-			return f, func() tea.Msg {
-				return QuitMsg{}
-			}
+		if f.searchMode {
+			return f.handleSearchInput(msg)
 		}
+		return f.handleNormalInput(msg)
 	}
 
 	return f, nil
+}
+
+func (f *FilePicker) handleSearchInput(msg tea.KeyMsg) (*FilePicker, tea.Cmd) {
+	switch msg.Type {
+	case tea.KeyEscape:
+		f.searchMode = false
+		f.searchQuery = ""
+		f.filterFiles()
+	case tea.KeyEnter:
+		f.searchMode = false
+		if len(f.filteredFiles) > 0 {
+			return f, func() tea.Msg {
+				return FileSelectedMsg{Path: f.filteredFiles[f.selected]}
+			}
+		}
+	case tea.KeyBackspace:
+		if len(f.searchQuery) > 0 {
+			f.searchQuery = f.searchQuery[:len(f.searchQuery)-1]
+			f.filterFiles()
+		}
+	case tea.KeyRunes:
+		f.searchQuery += string(msg.Runes)
+		f.filterFiles()
+	case tea.KeySpace:
+		f.searchQuery += " "
+		f.filterFiles()
+	}
+	return f, nil
+}
+
+func (f *FilePicker) handleNormalInput(msg tea.KeyMsg) (*FilePicker, tea.Cmd) {
+	switch msg.String() {
+	case "/":
+		f.searchMode = true
+		f.searchQuery = ""
+	case "up", "k":
+		f.selectPrev()
+	case "down", "j":
+		f.selectNext()
+	case "g":
+		f.selectFirst()
+	case "G":
+		f.selectLast()
+	case "enter":
+		if len(f.filteredFiles) > 0 {
+			return f, func() tea.Msg {
+				return FileSelectedMsg{Path: f.filteredFiles[f.selected]}
+			}
+		}
+	case "q", "esc", "ctrl+c":
+		return f, func() tea.Msg {
+			return QuitMsg{}
+		}
+	}
+	return f, nil
+}
+
+func (f *FilePicker) filterFiles() {
+	if f.searchQuery == "" {
+		f.filteredFiles = f.files
+		f.selected = 0
+		f.offset = 0
+		return
+	}
+
+	query := strings.ToLower(f.searchQuery)
+	filtered := make([]string, 0)
+	for _, file := range f.files {
+		if strings.Contains(strings.ToLower(file), query) {
+			filtered = append(filtered, file)
+		}
+	}
+	f.filteredFiles = filtered
+	f.selected = 0
+	f.offset = 0
 }
 
 // View renders the file picker.
@@ -108,27 +176,70 @@ func (f *FilePicker) View() string {
 		return ""
 	}
 
-	var sb strings.Builder
+	colors := f.theme.Colors()
 
-	// Title
-	titleStyle := lipgloss.NewStyle().
-		Foreground(f.theme.Colors().Foreground).
-		Background(f.theme.Colors().Info).
-		Bold(true).
-		Padding(0, 1).
-		Width(f.width)
-
-	title := "Select a Log File"
-	if len(f.files) > 0 {
-		title = fmt.Sprintf("Select a Log File (%d/%d)", f.selected+1, len(f.files))
+	// Calculate container dimensions
+	containerWidth := f.width - 8
+	if containerWidth < 40 {
+		containerWidth = 40
 	}
-	sb.WriteString(titleStyle.Render(title))
-	sb.WriteString("\n\n")
+	if containerWidth > 100 {
+		containerWidth = 100
+	}
 
-	// Calculate visible range
-	visibleHeight := f.height - 6 // Reserve space for title, footer, etc.
-	if visibleHeight < 1 {
-		visibleHeight = 1
+	contentWidth := containerWidth - 6
+
+	var content strings.Builder
+
+	// Header with icon and title
+	headerStyle := lipgloss.NewStyle().
+		Foreground(colors.Info).
+		Bold(true)
+
+	titleText := " Select Log File"
+	if len(f.filteredFiles) > 0 {
+		titleText = fmt.Sprintf(" Select Log File (%d/%d)", f.selected+1, len(f.filteredFiles))
+	}
+	content.WriteString(headerStyle.Render(titleText))
+	content.WriteString("\n")
+
+	// Separator line
+	separatorStyle := lipgloss.NewStyle().
+		Foreground(colors.Info).
+		Faint(true)
+	content.WriteString(separatorStyle.Render(strings.Repeat("─", contentWidth)))
+	content.WriteString("\n")
+
+	// Search bar (always show, highlight when active)
+	searchBarStyle := lipgloss.NewStyle().
+		Padding(0, 1).
+		Width(contentWidth)
+
+	if f.searchMode {
+		searchBarStyle = searchBarStyle.
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(colors.Warn)
+		searchText := f.searchQuery
+		if searchText == "" {
+			searchText = "type to search..."
+		}
+		content.WriteString(searchBarStyle.Render("/ " + searchText + "█"))
+	} else {
+		searchBarStyle = searchBarStyle.
+			Foreground(colors.Foreground).
+			Faint(true)
+		if f.searchQuery != "" {
+			content.WriteString(searchBarStyle.Render("/ " + f.searchQuery + " (press / to edit)"))
+		} else {
+			content.WriteString(searchBarStyle.Render("Press / to search"))
+		}
+	}
+	content.WriteString("\n\n")
+
+	// Calculate visible range for file list
+	visibleHeight := f.height - 14
+	if visibleHeight < 3 {
+		visibleHeight = 3
 	}
 
 	// Adjust offset to keep selected item visible
@@ -140,89 +251,128 @@ func (f *FilePicker) View() string {
 	}
 
 	// File list
-	if len(f.files) == 0 {
-		noFilesStyle := lipgloss.NewStyle().
-			Foreground(f.theme.Colors().Foreground).
+	if len(f.filteredFiles) == 0 {
+		emptyStyle := lipgloss.NewStyle().
+			Foreground(colors.Warn).
 			Italic(true).
-			Padding(1, 2)
-		sb.WriteString(noFilesStyle.Render("No .log files found in this directory"))
+			Padding(1, 0)
+		if f.searchQuery != "" {
+			content.WriteString(emptyStyle.Render("No files match your search"))
+		} else {
+			content.WriteString(emptyStyle.Render("No .log files found"))
+		}
+		content.WriteString("\n")
 	} else {
 		start := f.offset
 		end := f.offset + visibleHeight
-		if end > len(f.files) {
-			end = len(f.files)
+		if end > len(f.filteredFiles) {
+			end = len(f.filteredFiles)
 		}
 
 		for i := start; i < end; i++ {
-			var style lipgloss.Style
-			if i == f.selected {
-				style = lipgloss.NewStyle().
-					Foreground(f.theme.Colors().Background).
-					Background(f.theme.Colors().Info).
-					Bold(true).
-					Padding(0, 1).
-					Width(f.width - 4)
-			} else {
-				style = lipgloss.NewStyle().
-					Foreground(f.theme.Colors().Foreground).
-					Padding(0, 1).
-					Width(f.width - 4)
+			isSelected := i == f.selected
+
+			// File icon and path
+			icon := "  "
+			if isSelected {
+				icon = " "
 			}
 
-			line := f.formatPath(f.files[i])
-			if len(line) > f.width-6 {
+			line := f.formatPath(f.filteredFiles[i])
+			maxLen := contentWidth - 6
+			if len(line) > maxLen {
 				// Truncate from the middle for better readability
-				if f.width > 20 {
-					left := (f.width - 12) / 2
-					right := (f.width - 12) - left
+				if maxLen > 20 {
+					left := (maxLen - 3) / 2
+					right := maxLen - 3 - left
 					line = line[:left] + "..." + line[len(line)-right:]
 				} else {
-					line = line[:f.width-9] + "..."
+					line = line[:maxLen-3] + "..."
 				}
 			}
-			sb.WriteString("  ")
-			sb.WriteString(style.Render(line))
-			sb.WriteString("\n")
+
+			var itemStyle lipgloss.Style
+			if isSelected {
+				itemStyle = lipgloss.NewStyle().
+					Foreground(colors.Background).
+					Background(colors.Info).
+					Bold(true).
+					Width(contentWidth).
+					Padding(0, 1)
+			} else {
+				itemStyle = lipgloss.NewStyle().
+					Foreground(colors.Foreground).
+					Width(contentWidth).
+					Padding(0, 1)
+			}
+
+			content.WriteString(itemStyle.Render(icon + line))
+			content.WriteString("\n")
+		}
+
+		// Scroll indicator
+		if len(f.filteredFiles) > visibleHeight {
+			scrollInfo := fmt.Sprintf("  %d more above", f.offset)
+			scrollInfoBottom := fmt.Sprintf("  %d more below", len(f.filteredFiles)-end)
+
+			scrollStyle := lipgloss.NewStyle().
+				Foreground(colors.Foreground).
+				Faint(true).
+				Italic(true)
+
+			if f.offset > 0 {
+				content.WriteString(scrollStyle.Render(scrollInfo))
+				content.WriteString("\n")
+			}
+			if end < len(f.filteredFiles) {
+				content.WriteString(scrollStyle.Render(scrollInfoBottom))
+				content.WriteString("\n")
+			}
 		}
 	}
 
-	// Footer with help
-	sb.WriteString("\n")
+	// Footer with keybindings
+	content.WriteString("\n")
 	footerStyle := lipgloss.NewStyle().
-		Foreground(f.theme.Colors().Foreground).
-		Faint(true).
-		Width(f.width)
+		Foreground(colors.Foreground).
+		Faint(true)
 
-	footer := fmt.Sprintf("↑/k up • ↓/j down • g top • G bottom • enter select • q/esc quit | %d files", len(f.files))
-	sb.WriteString(footerStyle.Render(footer))
+	var footerText string
+	if f.searchMode {
+		footerText = "type to filter  enter confirm  esc cancel"
+	} else {
+		footerText = "j/k navigate  / search  enter select  q quit"
+	}
+	content.WriteString(footerStyle.Render(footerText))
 
-	// Center the content
+	// Container with border
 	containerStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(f.theme.Colors().Info).
+		BorderForeground(colors.Info).
 		Padding(1, 2).
-		Width(f.width)
+		Width(containerWidth)
 
+	// Center the container on screen
 	return lipgloss.Place(
 		f.width,
 		f.height,
 		lipgloss.Center,
 		lipgloss.Center,
-		containerStyle.Render(sb.String()),
+		containerStyle.Render(content.String()),
 	)
 }
 
 func (f *FilePicker) selectNext() {
-	if len(f.files) == 0 {
+	if len(f.filteredFiles) == 0 {
 		return
 	}
-	if f.selected < len(f.files)-1 {
+	if f.selected < len(f.filteredFiles)-1 {
 		f.selected++
 	}
 }
 
 func (f *FilePicker) selectPrev() {
-	if len(f.files) == 0 {
+	if len(f.filteredFiles) == 0 {
 		return
 	}
 	if f.selected > 0 {
@@ -231,17 +381,17 @@ func (f *FilePicker) selectPrev() {
 }
 
 func (f *FilePicker) selectFirst() {
-	if len(f.files) == 0 {
+	if len(f.filteredFiles) == 0 {
 		return
 	}
 	f.selected = 0
 }
 
 func (f *FilePicker) selectLast() {
-	if len(f.files) == 0 {
+	if len(f.filteredFiles) == 0 {
 		return
 	}
-	f.selected = len(f.files) - 1
+	f.selected = len(f.filteredFiles) - 1
 }
 
 // SetTheme sets the theme.
