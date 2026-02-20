@@ -90,16 +90,6 @@ brew install ersisk/tap/sieve
 go install github.com/ersisk/sieve@latest
 ```
 
-### Scoop (Windows)
-
-```bash
-# Add the bucket (first time only)
-scoop bucket add ersisk https://github.com/ersisk/scoop-bucket
-
-# Install sieve
-scoop install sieve
-```
-
 ### Debian / Ubuntu (.deb)
 
 ```bash
@@ -469,10 +459,10 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 ## 🗺️ Roadmap
 
 - [X] Core JSON log viewing with colorization
-- [ ] Live tail mode (`-f`)
-- [ ] Fuzzy file finder
-- [ ] Advanced filtering engine
-- [ ] Vim-style keybindings
+- [X] Live tail mode (`-f`)
+- [X] Fuzzy file finder
+- [X] Advanced filtering engine
+- [X] Vim-style keybindings
 - [ ] Remote log source support (SSH, S3)
 - [ ] Log format auto-detection (logfmt, CLF, CSV)
 - [ ] Export filtered results to file
