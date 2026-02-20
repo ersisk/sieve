@@ -80,39 +80,45 @@ jobs:
           DARWIN_ARM64=$(grep "sieve_.*_darwin_arm64.tar.gz" checksums.txt | awk '{print $1}')
           LINUX_AMD64=$(grep "sieve_.*_linux_amd64.tar.gz" checksums.txt | awk '{print $1}')
           LINUX_ARM64=$(grep "sieve_.*_linux_arm64.tar.gz" checksums.txt | awk '{print $1}')
-          echo "darwin_amd64=$DARWIN_AMD64" >> $GITHUB_OUTPUT
-          echo "darwin_arm64=$DARWIN_ARM64" >> $GITHUB_OUTPUT
-          echo "linux_amd64=$LINUX_AMD64" >> $GITHUB_OUTPUT
-          echo "linux_arm64=$LINUX_ARM64" >> $GITHUB_OUTPUT
+          echo "darwin_amd64=${DARWIN_AMD64}" >> "$GITHUB_OUTPUT"
+          echo "darwin_arm64=${DARWIN_ARM64}" >> "$GITHUB_OUTPUT"
+          echo "linux_amd64=${LINUX_AMD64}" >> "$GITHUB_OUTPUT"
+          echo "linux_arm64=${LINUX_ARM64}" >> "$GITHUB_OUTPUT"
 
       - name: Update Homebrew formula
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          DARWIN_AMD64_SHA: ${{ steps.sha.outputs.darwin_amd64 }}
+          DARWIN_ARM64_SHA: ${{ steps.sha.outputs.darwin_arm64 }}
+          LINUX_AMD64_SHA: ${{ steps.sha.outputs.linux_amd64 }}
+          LINUX_ARM64_SHA: ${{ steps.sha.outputs.linux_arm64 }}
         run: |
-          cat > homebrew-tap/Formula/sieve.rb << 'EOF'
+          cat > homebrew-tap/Formula/sieve.rb << EOF
           class Sieve < Formula
             desc "Blazing-fast, multi-platform JSON log viewer for your terminal"
             homepage "https://github.com/ersisk/sieve"
-            version "${{ steps.release.outputs.version }}"
+            version "${VERSION}"
             license "Apache-2.0"
 
             on_macos do
               on_intel do
-                url "https://github.com/ersisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_darwin_amd64.tar.gz"
-                sha256 "${{ steps.sha.outputs.darwin_amd64 }}"
+                url "https://github.com/ersisk/sieve/releases/download/v${VERSION}/sieve_${VERSION}_darwin_amd64.tar.gz"
+                sha256 "${DARWIN_AMD64_SHA}"
               end
               on_arm do
-                url "https://github.com/ersisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_darwin_arm64.tar.gz"
-                sha256 "${{ steps.sha.outputs.darwin_arm64 }}"
+                url "https://github.com/ersisk/sieve/releases/download/v${VERSION}/sieve_${VERSION}_darwin_arm64.tar.gz"
+                sha256 "${DARWIN_ARM64_SHA}"
               end
             end
 
             on_linux do
               on_intel do
-                url "https://github.com/ersisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_linux_amd64.tar.gz"
-                sha256 "${{ steps.sha.outputs.linux_amd64 }}"
+                url "https://github.com/ersisk/sieve/releases/download/v${VERSION}/sieve_${VERSION}_linux_amd64.tar.gz"
+                sha256 "${LINUX_AMD64_SHA}"
               end
               on_arm do
-                url "https://github.com/ersisk/sieve/releases/download/v${{ steps.release.outputs.version }}/sieve_${{ steps.release.outputs.version }}_linux_arm64.tar.gz"
-                sha256 "${{ steps.sha.outputs.linux_arm64 }}"
+                url "https://github.com/ersisk/sieve/releases/download/v${VERSION}/sieve_${VERSION}_linux_arm64.tar.gz"
+                sha256 "${LINUX_ARM64_SHA}"
               end
             end
 
@@ -121,7 +127,7 @@ jobs:
             end
 
             test do
-              assert_match version.to_s, shell_output("#{bin}/sieve --version")
+              assert_match version.to_s, shell_output("\#{bin}/sieve --version")
             end
           end
           EOF
