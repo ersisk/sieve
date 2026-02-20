@@ -34,6 +34,7 @@ type Model struct {
 	treeView      ui.TreeView
 	dashboard     ui.Dashboard
 	logDetail     *ui.LogDetail
+	filePicker    ui.FilePicker
 	keyMap        KeyMap
 	theme         theme.Theme
 	entries       []logentry.Entry
@@ -71,6 +72,7 @@ func NewModel(filePath string, themeName string, followMode bool) Model {
 		treeView:     ui.NewTreeView(theme),
 		dashboard:    ui.NewDashboard(theme),
 		logDetail:    ui.NewLogDetail(theme),
+		filePicker:   ui.NewFilePicker(theme),
 		keyMap:       DefaultKeyMap(),
 		theme:        theme,
 		entries:      []logentry.Entry{},
@@ -95,10 +97,34 @@ func getTheme(name string) theme.Theme {
 }
 
 func (m Model) Init() tea.Cmd {
-	if m.filePath != "" {
-		return tea.Batch(tickCmd(), loadFileCmd(m.filePath))
+	if m.filePath == "" {
+		// No file specified - show file picker with current directory
+		cwd, err := os.Getwd()
+		if err != nil {
+			cwd = "."
+		}
+		return tea.Batch(
+			tickCmd(),
+			func() tea.Msg {
+				return ui.ShowFilePickerMsg{Directory: cwd}
+			},
+		)
 	}
-	return tickCmd()
+
+	// Check if the provided path is a directory
+	info, err := os.Stat(m.filePath)
+	if err == nil && info.IsDir() {
+		// It's a directory - show file picker
+		return tea.Batch(
+			tickCmd(),
+			func() tea.Msg {
+				return ui.ShowFilePickerMsg{Directory: m.filePath}
+			},
+		)
+	}
+
+	// It's a file - load it directly
+	return tea.Batch(tickCmd(), loadFileCmd(m.filePath))
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -106,24 +132,35 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		// File picker mode handling - intercept all key messages when visible
+		if m.filePicker.IsVisible() {
+			var updatedPicker *ui.FilePicker
+			updatedPicker, cmd = m.filePicker.Update(msg)
+			m.filePicker = *updatedPicker
+			return m, cmd
+		}
 		if m.filterBar.IsFocused() && msg.Type == tea.KeyEnter {
 			m.filterBar.Hide()
+			m.mode = "view"
 			return m, tea.Batch(tickCmd(), tea.Tick(time.Millisecond*100, func(t time.Time) tea.Msg {
 				return ui.FilterSubmitMsg{}
 			}))
 		}
-		if m.filterBar.IsFocused() && msg.Type == tea.KeyEsc {
+		if (m.filterBar.IsFocused() || m.filterBar.IsVisible()) && msg.Type == tea.KeyEsc {
 			m.filterBar.Hide()
+			m.mode = "view"
 			return m, tickCmd()
 		}
 		if m.searchBar.IsFocused() && msg.Type == tea.KeyEnter {
 			m.searchBar.Hide()
+			m.mode = "view"
 			return m, tea.Batch(tickCmd(), tea.Tick(time.Millisecond*100, func(t time.Time) tea.Msg {
 				return ui.SearchSubmitMsg{}
 			}))
 		}
-		if m.searchBar.IsFocused() && msg.Type == tea.KeyEsc {
+		if (m.searchBar.IsFocused() || m.searchBar.IsVisible()) && msg.Type == tea.KeyEsc {
 			m.searchBar.Hide()
+			m.mode = "view"
 			return m, tickCmd()
 		}
 		if m.searchBar.IsFocused() {
@@ -257,12 +294,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.updateSelectedEntry()
 		}
 		return m, tickCmd()
+	case ui.ClearInfoMsg:
+		m.statusBar.SetInfo("")
+		return m, tickCmd()
+	case ui.ShowFilePickerMsg:
+		m.filePicker.Show()
+		m.mode = "filepicker"
+		return m, tea.Batch(tickCmd(), findLogFilesCmd(msg.Directory))
+	case ui.LogFilesFoundMsg:
+		m.filePicker.SetFiles(msg.Files)
+		return m, tickCmd()
+	case ui.FileSelectedMsg:
+		m.filePicker.Hide()
+		m.mode = "view"
+		m.filePath = msg.Path
+		m.loading = true
+		return m, tea.Batch(tickCmd(), loadFileCmd(msg.Path))
 	}
 
 	return m, cmd
 }
 
 func (m Model) View() string {
+	if m.filePicker.IsVisible() {
+		return (&m.filePicker).View()
+	}
+
 	if m.loading {
 		return m.renderLoading()
 	}
@@ -310,6 +367,22 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		return m, tickCmd()
 	}
 
+	if m.dashboard.IsVisible() {
+		if msg.Type == tea.KeyEsc {
+			m.dashboard.Hide()
+			m.mode = "view"
+			return m, tickCmd()
+		}
+		// Dashboard içinde scroll yapılabilir
+		switch msg.String() {
+		case m.keyMap.ScrollUp.key.String():
+			return m, tickCmd()
+		case m.keyMap.ScrollDown.key.String():
+			return m, tickCmd()
+		}
+		return m, tickCmd()
+	}
+
 	// Esc: search modundan çık
 	if msg.Type == tea.KeyEsc && m.searchQuery != "" {
 		m.searchQuery = ""
@@ -318,6 +391,18 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		m.logView.SetSearchQuery("")
 		m.statusBar.SetInfo("")
 		return m, tickCmd()
+	}
+
+	// Esc: filter modundan çık ve filtreyi temizle
+	if msg.Type == tea.KeyEsc && (m.filter != nil || m.levelFilter != logentry.Unknown) {
+		m.filter = nil
+		m.filterExpr = ""
+		m.levelFilter = logentry.Unknown
+		m.filtered = m.entries
+		m.logView.SetEntries(m.filtered)
+		m.statusBar.SetTotalLines(len(m.filtered))
+		m.statusBar.SetInfo("Filter cleared")
+		return m, tea.Batch(tickCmd(), clearInfoCmd(2*time.Second))
 	}
 
 	switch msg.String() {
@@ -425,7 +510,7 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		return m, tea.Batch(tickCmd(), loadFileCmd(m.filePath), tickCmd())
 	case m.keyMap.ToggleSort.key.String():
 		m.toggleSort()
-		return m, tickCmd()
+		return m, tea.Batch(tickCmd(), clearInfoCmd(2*time.Second))
 	case m.keyMap.Expand.key.String():
 		m.logDetail.Show(m.selectedEntry)
 		return m, tickCmd()
@@ -446,6 +531,7 @@ func (m *Model) handleResize(msg tea.WindowSizeMsg) {
 	m.sidebar.SetSize(width/3, height-2)
 	m.treeView.SetSize(width/3, height-2)
 	m.logDetail.SetSize(width, height)
+	m.filePicker.SetSize(width, height)
 
 	m.statusBar.SetFilePath(m.filePath)
 	m.statusBar.SetTotalLines(len(m.filtered))
@@ -517,7 +603,7 @@ func (m Model) applyLevelFilter() (Model, tea.Cmd) {
 		m.logView.SetEntries(m.filtered)
 		m.statusBar.SetTotalLines(len(m.filtered))
 		m.statusBar.SetInfo(fmt.Sprintf("Level filter cleared — %d entries", len(m.filtered)))
-		return m, tickCmd()
+		return m, tea.Batch(tickCmd(), clearInfoCmd(2*time.Second))
 	}
 
 	var filtered []logentry.Entry
@@ -615,7 +701,7 @@ func (m *Model) jumpToSearchResult(idx int) {
 	result := m.searchResults[idx]
 	// filtered slice içindeki gerçek index'i bul
 	for i, entry := range m.filtered {
-		if entry.Raw == result.Entry.Raw && entry.Timestamp == result.Entry.Timestamp {
+		if entry.Raw == result.Entry.Raw && entry.Timestamp.Equal(result.Entry.Timestamp) {
 			m.logView.SetSelected(i)
 			m.selectedEntry = entry
 			m.sidebar.SetEntry(entry)

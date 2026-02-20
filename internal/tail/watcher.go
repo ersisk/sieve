@@ -32,7 +32,7 @@ func NewWatcher(path string) (*Watcher, error) {
 
 	reader, err := NewReader(path)
 	if err != nil {
-		watcher.Close()
+		_ = watcher.Close()
 		return nil, fmt.Errorf("failed to create reader: %w", err)
 	}
 
@@ -48,8 +48,8 @@ func NewWatcher(path string) (*Watcher, error) {
 	}
 
 	if err := w.watcher.Add(path); err != nil {
-		reader.Close()
-		watcher.Close()
+		_ = reader.Close()
+		_ = watcher.Close()
 		return nil, fmt.Errorf("failed to add file to watcher: %w", err)
 	}
 

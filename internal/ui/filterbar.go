@@ -24,7 +24,8 @@ type FilterBar struct {
 func NewFilterBar(theme theme.Theme) FilterBar {
 	ti := textinput.New()
 	ti.Placeholder = "Filter expression (e.g., .level >= 30)"
-	ti.Prompt = "F:"
+	ti.Prompt = "F: "
+	ti.CharLimit = 200
 	ti.PromptStyle = lipgloss.NewStyle().Foreground(theme.Colors().Foreground)
 	ti.TextStyle = lipgloss.NewStyle().Foreground(theme.Colors().Foreground)
 	ti.PlaceholderStyle = lipgloss.NewStyle().Foreground(theme.Colors().Foreground)
@@ -82,7 +83,10 @@ func (m *FilterBar) Clear() {
 func (m *FilterBar) SetSize(width, height int) {
 	m.width = width
 	m.height = height
-	m.textInput.Width = width - 20
+	// Reserve space for prompt (3 chars: "F: ") and some padding
+	if width > 5 {
+		m.textInput.Width = width - 5
+	}
 }
 
 // SetTheme sets the theme.
@@ -99,6 +103,14 @@ func (m *FilterBar) SetTheme(theme theme.Theme) {
 func (m FilterBar) Update(msg tea.Msg) (FilterBar, tea.Cmd) {
 	if !m.visible {
 		return m, nil
+	}
+
+	// ESC tuşunu textinput'a göndermeden önce kontrol et
+	if keyMsg, ok := msg.(tea.KeyMsg); ok {
+		if keyMsg.Type == tea.KeyEsc {
+			// ESC tuşunu consume etme, parent'a geçmesine izin ver
+			return m, nil
+		}
 	}
 
 	var cmd tea.Cmd

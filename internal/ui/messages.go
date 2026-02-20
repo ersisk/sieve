@@ -168,3 +168,16 @@ type ErrorMsg struct {
 type LoadFileMsg struct {
 	Path string
 }
+
+// ClearInfoMsg is sent to clear info/error messages from status bar.
+type ClearInfoMsg struct{}
+
+// LogFilesFoundMsg is sent when log files are found in a directory.
+type LogFilesFoundMsg struct {
+	Files []string
+}
+
+// ShowFilePickerMsg is sent to show the file picker.
+type ShowFilePickerMsg struct {
+	Directory string
+}

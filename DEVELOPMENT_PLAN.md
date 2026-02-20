@@ -32,7 +32,7 @@ Sieve is a terminal-based JSON log viewer TUI built with Go + Bubble Tea. The pr
 - `internal/config/config.go` — `Config` struct, `Load() (*Config, error)` (via Viper)
 - `internal/config/config_test.go`
 - `internal/theme/theme.go` — `Theme` interface: `LevelStyle()`, `TimestampStyle()`, `KeyStyle()`, etc.
-- `internal/theme/builtin.go` — Monokai, Dracula, Gruvbox, Nord themes; `Registry`, `Get(name)`
+- `internal/theme/builtin.go` — Kanagawa (default), Monokai, Dracula, Gruvbox, Nord themes; `Registry`, `Get(name)`
 - `internal/theme/theme_test.go`
 - `cmd/root.go` — Cobra root command: `--theme`, `--level`, `--filter`, `-f`, `--config` flags
 

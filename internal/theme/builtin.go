@@ -83,22 +83,43 @@ var (
 			Highlight:  lipgloss.Color("#3B4252"),
 		},
 	}
+
+	Kanagawa = BaseTheme{
+		ThemeName: "kanagawa",
+		ThemeColors: ThemeColors{
+			Debug:      lipgloss.Color("#727169"), // sumiInk4
+			Info:       lipgloss.Color("#7FB4CA"), // springBlue
+			Warn:       lipgloss.Color("#FF9E3B"), // roninYellow
+			Error:      lipgloss.Color("#E82424"), // samuraiRed
+			Fatal:      lipgloss.Color("#C34043"), // peachRed
+			Timestamp:  lipgloss.Color("#7AA89F"), // waveAqua1
+			Key:        lipgloss.Color("#957FB8"), // oniViolet
+			Value:      lipgloss.Color("#DCA561"), // boatYellow2
+			Background: lipgloss.Color("#1F1F28"), // sumiInk1
+			Foreground: lipgloss.Color("#DCD7BA"), // fujiWhite
+			StatusBar:  lipgloss.Color("#2A2A37"), // sumiInk3
+			StatusText: lipgloss.Color("#DCD7BA"), // fujiWhite
+			Border:     lipgloss.Color("#54546D"), // sumiInk5
+			Highlight:  lipgloss.Color("#2D4F67"), // waveBlue2
+		},
+	}
 )
 
 // registry holds all available themes.
 var registry = map[string]Theme{
-	"monokai": Monokai,
-	"dracula": Dracula,
-	"gruvbox": Gruvbox,
-	"nord":    Nord,
+	"monokai":  Monokai,
+	"dracula":  Dracula,
+	"gruvbox":  Gruvbox,
+	"nord":     Nord,
+	"kanagawa": Kanagawa,
 }
 
-// Get returns a theme by name. Falls back to Monokai if not found.
+// Get returns a theme by name. Falls back to Kanagawa if not found.
 func Get(name string) Theme {
 	if t, ok := registry[name]; ok {
 		return t
 	}
-	return Monokai
+	return Kanagawa
 }
 
 // Names returns all available theme names.

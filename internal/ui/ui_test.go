@@ -398,8 +398,8 @@ func TestLogDetail_Show(t *testing.T) {
 	content := detail.viewport.View()
 
 	// Check for Raw JSON header
-	if !contains(content, "Raw JSON:") {
-		t.Error("View() missing 'Raw JSON:' header")
+	if !contains(content, "RAW JSON") {
+		t.Error("View() missing 'RAW JSON' header")
 	}
 
 	// Check for Raw JSON content

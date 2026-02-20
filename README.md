@@ -278,7 +278,7 @@ Sieve looks for a configuration file at `~/.config/sieve/config.yaml`.
 ```yaml
 # ~/.config/sieve/config.yaml
 
-theme: "dracula"           # monokai | dracula | gruvbox | nord | solarized | custom
+theme: "kanagawa"          # kanagawa (default) | monokai | dracula | gruvbox | nord
 
 colors:
   debug: "#6272A4"
@@ -325,13 +325,11 @@ Sieve ships with several built-in themes:
 
 | Theme | Description |
 |---|---|
-| `monokai` | Classic dark theme (default) |
+| `kanagawa` | Inspired by famous painting, balanced and calm (default) |
+| `monokai` | Classic dark theme |
 | `dracula` | Popular dark purple theme |
 | `gruvbox` | Retro warm dark theme |
 | `nord` | Arctic, north-bluish palette |
-| `solarized` | Precision colors, dark variant |
-| `catppuccin` | Pastel-flavored dark theme |
-| `tokyonight` | Clean dark theme with vivid accents |
 
 You can also define fully custom themes in your config file.
 

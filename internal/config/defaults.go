@@ -2,7 +2,7 @@ package config
 
 // Default configuration values.
 const (
-	DefaultTheme           = "monokai"
+	DefaultTheme           = "kanagawa"
 	DefaultTimestampFormat = "2006-01-02T15:04:05Z07:00"
 	DefaultShowLineNumbers = true
 	DefaultWrapLines       = false
