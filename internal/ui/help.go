@@ -66,6 +66,10 @@ func (m Help) Update(msg tea.Msg) (Help, tea.Cmd) {
 		m.scrollUp(msg.Amount)
 	case ScrollDownMsg:
 		m.scrollDown(msg.Amount)
+	case ScrollToTopMsg:
+		m.scrollToTop()
+	case ScrollToBottomMsg:
+		m.scrollToBottom()
 	}
 	return m, nil
 }
@@ -89,6 +93,21 @@ func (m *Help) scrollDown(amount int) {
 	if m.scrollOffset > maxOffset {
 		m.scrollOffset = maxOffset
 	}
+}
+
+// scrollToTop scrolls to the top.
+func (m *Help) scrollToTop() {
+	m.scrollOffset = 0
+}
+
+// scrollToBottom scrolls to the bottom.
+func (m *Help) scrollToBottom() {
+	contentLines := m.getContentLines()
+	maxOffset := len(contentLines) - (m.height - 4)
+	if maxOffset < 0 {
+		maxOffset = 0
+	}
+	m.scrollOffset = maxOffset
 }
 
 // getContentLines returns the content as lines.

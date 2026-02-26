@@ -114,12 +114,31 @@ func (f *FilePicker) handleSearchInput(msg tea.KeyMsg) (*FilePicker, tea.Cmd) {
 			f.filterFiles()
 		}
 	case tea.KeyRunes:
-		f.searchQuery += string(msg.Runes)
-		f.filterFiles()
+		str := msg.String()
+		if str == "j" || str == "k" || str == "g" || str == "G" {
+			switch str {
+			case "j":
+				f.selectNext()
+			case "k":
+				f.selectPrev()
+			case "g":
+				f.selectFirst()
+			case "G":
+				f.selectLast()
+			}
+		} else {
+			f.searchQuery += string(msg.Runes)
+			f.filterFiles()
+		}
 	case tea.KeySpace:
 		f.searchQuery += " "
 		f.filterFiles()
+	case tea.KeyUp:
+		f.selectPrev()
+	case tea.KeyDown:
+		f.selectNext()
 	}
+
 	return f, nil
 }
 
@@ -339,7 +358,7 @@ func (f *FilePicker) View() string {
 
 	var footerText string
 	if f.searchMode {
-		footerText = "type to filter  enter confirm  esc cancel"
+		footerText = "↑/↓ navigate  type to filter  enter confirm  esc cancel"
 	} else {
 		footerText = "j/k navigate  / search  enter select  q quit"
 	}

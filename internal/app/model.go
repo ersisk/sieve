@@ -358,11 +358,25 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 			m.mode = "view"
 			return m, tickCmd()
 		}
+		switch msg.Type {
+		case tea.KeyUp:
+			return m, tea.Batch(tickCmd(), func() tea.Msg { return ui.ScrollUpMsg{Amount: 1} })
+		case tea.KeyDown:
+			return m, tea.Batch(tickCmd(), func() tea.Msg { return ui.ScrollDownMsg{Amount: 1} })
+		case tea.KeyPgUp:
+			return m, tea.Batch(tickCmd(), func() tea.Msg { return ui.ScrollUpMsg{Amount: 10} })
+		case tea.KeyPgDown:
+			return m, tea.Batch(tickCmd(), func() tea.Msg { return ui.ScrollDownMsg{Amount: 10} })
+		}
 		switch msg.String() {
 		case m.keyMap.ScrollUp.key.String():
 			return m, tea.Batch(tickCmd(), func() tea.Msg { return ui.ScrollUpMsg{Amount: 1} })
 		case m.keyMap.ScrollDown.key.String():
 			return m, tea.Batch(tickCmd(), func() tea.Msg { return ui.ScrollDownMsg{Amount: 1} })
+		case m.keyMap.ScrollToTop.key.String():
+			return m, tea.Batch(tickCmd(), func() tea.Msg { return ui.ScrollToTopMsg{} })
+		case m.keyMap.ScrollToBottom.key.String():
+			return m, tea.Batch(tickCmd(), func() tea.Msg { return ui.ScrollToBottomMsg{} })
 		}
 		return m, tickCmd()
 	}
@@ -403,6 +417,25 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		m.statusBar.SetTotalLines(len(m.filtered))
 		m.statusBar.SetInfo("Filter cleared")
 		return m, tea.Batch(tickCmd(), clearInfoCmd(2*time.Second))
+	}
+
+	switch msg.Type {
+	case tea.KeyUp:
+		m.logView.ScrollUpOne()
+		m.updateSelectedEntry()
+		return m, tickCmd()
+	case tea.KeyDown:
+		m.logView.ScrollDownOne()
+		m.updateSelectedEntry()
+		return m, tickCmd()
+	case tea.KeyPgUp:
+		m.logView.ScrollPageUp()
+		m.updateSelectedEntry()
+		return m, tickCmd()
+	case tea.KeyPgDown:
+		m.logView.ScrollPageDown()
+		m.updateSelectedEntry()
+		return m, tickCmd()
 	}
 
 	switch msg.String() {
